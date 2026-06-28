@@ -1,8 +1,90 @@
+// ── FIREBASE CLOUD SYNC ────────────────────────────────────
+let currentUser = null;
+let db = null;
+
+function updateSyncUI() {
+  const btn = document.getElementById('fb-auth-btn');
+  const status = document.getElementById('fb-sync-status');
+  if (!btn || !status) return;
+
+  if (currentUser) {
+    btn.innerHTML = 'Sign out';
+    btn.onclick = () => firebase.auth().signOut();
+    status.innerHTML = '🟢 Synced to ' + currentUser.email;
+  } else {
+    btn.innerHTML = 'Sign in with Google';
+    btn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).catch(e => console.error(e));
+    };
+    status.innerHTML = '⚪ Local only';
+  }
+}
+
+function initFirebase() {
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxkyeXKGEynqArhU4DuTOEUKTsIBx8pg4",
+    authDomain: "nexus-leveling.firebaseapp.com",
+    databaseURL: "https://nexus-leveling-default-rtdb.firebaseio.com",
+    projectId: "nexus-leveling",
+    storageBucket: "nexus-leveling.firebasestorage.app",
+    messagingSenderId: "341636710567",
+    appId: "1:341636710567:web:b70f441af31e275637db82"
+  };
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+
+  firebase.auth().onAuthStateChanged((user) => {
+    currentUser = user;
+    updateSyncUI();
+    if (user) {
+      // Pull data once on login
+      db.ref(`users/${user.uid}`).once('value').then(snapshot => {
+        const cloudData = snapshot.val();
+        if (cloudData) {
+          for (const key in cloudData) {
+            localStorage.setItem(key, JSON.stringify(cloudData[key]));
+          }
+          if (typeof render === 'function') render();
+          if (typeof renderCustomList === 'function') renderCustomList();
+          if (typeof loadLog === 'function') loadLog();
+        }
+      });
+    }
+  });
+}
+
+// Dynamically load Firebase SDKs
+(function loadFirebaseSDKs() {
+  const v = "10.12.0";
+  const scripts = [
+    `https://www.gstatic.com/firebasejs/${v}/firebase-app-compat.js`,
+    `https://www.gstatic.com/firebasejs/${v}/firebase-auth-compat.js`,
+    `https://www.gstatic.com/firebasejs/${v}/firebase-database-compat.js`
+  ];
+  let loaded = 0;
+  scripts.forEach(src => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => {
+      loaded++;
+      if (loaded === scripts.length) initFirebase();
+    };
+    document.head.appendChild(s);
+  });
+})();
+
 // ── STORAGE ──────────────────────────────────────────────
 const S = {
   get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-  del: k => localStorage.removeItem(k)
+  set: (k, v) => {
+    localStorage.setItem(k, JSON.stringify(v));
+    if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).set(v).catch(console.error);
+  },
+  del: k => {
+    localStorage.removeItem(k);
+    if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).remove().catch(console.error);
+  }
 };
 
 const KEYS = {
