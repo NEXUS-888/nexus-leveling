@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXUS leveling — Jobs</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <div class="nav-brand">⚡ <span>NEXUS</span>leveling</div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="log.html">Daily Log</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="resources.html">Resources</a>
+    <a href="flashcards.html">Flashcards</a>
+    <a href="projects.html">Projects</a>
+    <a href="jobs.html" class="active">Jobs</a>
+    <a href="cheatsheet.html">Cheatsheet</a>
+  </div>
+  <div class="nav-right"><div class="streak-pill" id="streak-pill">🔥 0d streak</div></div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Job Tracker</h1>
+    <p>Track every application. Target: 50+ for internships, 100+ for full-time.</p>
+  </div>
+
+  <div class="stats-grid" id="job-stats" style="margin-bottom:1.5rem;"></div>
+
+  <!-- TARGET COMPANIES -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Target companies (from your roadmap)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="target-companies"></div>
+  </div>
+
+  <!-- ADD APPLICATION FORM -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Log an application</div>
+    <div class="form-row three">
+      <div>
+        <label>Company *</label>
+        <input type="text" id="company" placeholder="Razorpay, Swiggy...">
+      </div>
+      <div>
+        <label>Role *</label>
+        <input type="text" id="role" placeholder="DevOps Intern, SRE...">
+      </div>
+      <div>
+        <label>Type</label>
+        <select id="app-type">
+          <option>Internship</option>
+          <option>Full-time</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row three">
+      <div>
+        <label>Platform</label>
+        <input type="text" id="platform" placeholder="LinkedIn, Internshala...">
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="status">
+          <option value="applied">Applied</option>
+          <option value="oa">Online Assessment</option>
+          <option value="interview">Interview</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div>
+        <label>Job URL</label>
+        <input type="url" id="job-url" placeholder="https://...">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input type="text" id="app-notes" placeholder="Referral, recruiter name, anything relevant...">
+    </div>
+    <button class="btn btn-primary" onclick="addApp()">+ Log application</button>
+  </div>
+
+  <!-- FILTER -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
+    <select id="filter-status" onchange="render()" style="font-size:13px;padding:7px 10px;">
+      <option value="">All statuses</option>
+      <option value="applied">Applied</option>
+      <option value="oa">Online Assessment</option>
+      <option value="interview">Interview</option>
+      <option value="offer">Offer</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <select id="filter-type" onchange="render()" style="font-size:13px;padding:7px 10px;">
+      <option value="">All types</option>
+      <option>Internship</option>
+      <option>Full-time</option>
+    </select>
+    <input type="text" id="search" oninput="render()" placeholder="Search company..." style="font-size:13px;padding:7px 10px;width:200px;">
+    <span id="followup-count" style="font-size:12px;color:var(--amber);margin-left:auto;"></span>
+  </div>
+
+  <div id="apps-list"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+const TARGETS = [
+  { name: 'Razorpay', type: 'fintech' },
+  { name: 'CRED', type: 'fintech' },
+  { name: 'Groww', type: 'fintech' },
+  { name: 'Zepto', type: 'startup' },
+  { name: 'Swiggy', type: 'startup' },
+  { name: 'Atlassian', type: 'product' },
+  { name: 'AWS India', type: 'big tech' },
+  { name: 'Google Cloud', type: 'big tech' },
+  { name: 'Microsoft Azure', type: 'big tech' },
+  { name: 'Freshworks', type: 'product' },
+  { name: 'Zoho', type: 'product' },
+  { name: 'Infosys', type: 'service' },
+  { name: 'TCS', type: 'service' },
+  { name: 'Internshala', type: 'portal' },
+];
+
+const STATUS_LABELS = {
+  applied: { label: 'Applied', cls: 'badge-blue' },
+  oa: { label: 'OA', cls: 'badge-amber' },
+  interview: { label: 'Interview', cls: 'badge-purple' },
+  offer: { label: 'Offer 🎉', cls: 'badge-green' },
+  rejected: { label: 'Rejected', cls: 'badge-red' },
+};
+
+function getApps() { return S.get(KEYS.apps) || []; }
+
+function addApp() {
+  const company = document.getElementById('company').value.trim();
+  const role = document.getElementById('role').value.trim();
+  if (!company || !role) { toast('Company and role are required.', 'warning'); return; }
+
+  const app = {
+    id: Date.now(),
+    company,
+    role,
+    type: document.getElementById('app-type').value,
+    platform: document.getElementById('platform').value.trim(),
+    status: document.getElementById('status').value,
+    url: document.getElementById('job-url').value.trim(),
+    notes: document.getElementById('app-notes').value.trim(),
+    date: todayStr(),
+    dateLabel: fmtDate(Date.now()),
+    updatedAt: Date.now(),
+  };
+
+  const apps = getApps();
+  apps.unshift(app);
+  S.set(KEYS.apps, apps);
+
+  ['company','role','platform','job-url','app-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('status').value = 'applied';
+  render();
+  toast('Application logged!', 'success');
+}
+
+function updateStatus(id, newStatus) {
+  const apps = getApps();
+  const app = apps.find(a => a.id === id);
+  if (app) { app.status = newStatus; app.updatedAt = Date.now(); }
+  S.set(KEYS.apps, apps);
+  render();
+}
+
+function deleteApp(id) {
+  let apps = getApps();
+  apps = apps.filter(a => a.id !== id);
+  S.set(KEYS.apps, apps);
+  render();
+  toast('Deleted.');
+}
+
+function renderStats() {
+  const apps = getApps();
+  const total = apps.length;
+  const oa = apps.filter(a => a.status === 'oa').length;
+  const interview = apps.filter(a => a.status === 'interview').length;
+  const offer = apps.filter(a => a.status === 'offer').length;
+  const rejected = apps.filter(a => a.status === 'rejected').length;
+  const internships = apps.filter(a => a.type === 'Internship').length;
+  const target = 50;
+  const pct = Math.min(Math.round(total / target * 100), 100);
+
+  document.getElementById('job-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total applied</div><div class="stat-val">${total}</div><div class="stat-sub">Target: ${target}</div></div>
+    <div class="stat-card"><div class="stat-label">Internships</div><div class="stat-val" style="color:var(--accent);">${internships}</div></div>
+    <div class="stat-card"><div class="stat-label">Interviews</div><div class="stat-val" style="color:var(--purple);">${interview}</div></div>
+    <div class="stat-card"><div class="stat-label">Offers</div><div class="stat-val" style="color:var(--green);">${offer}</div></div>
+    <div class="stat-card">
+      <div class="stat-label">Application target</div>
+      <div class="stat-val" style="color:${pct >= 100 ? 'var(--green)' : 'var(--amber)'};">${pct}%</div>
+      <div class="progress-bar-wrap" style="margin-top:6px;"><div class="progress-bar-fill" style="width:${pct}%;background:${pct>=100?'var(--green)':'var(--amber)'};"></div></div>
+    </div>`;
+}
+
+function renderTargets() {
+  const apps = getApps();
+  const applied = apps.map(a => a.company.toLowerCase());
+  document.getElementById('target-companies').innerHTML = TARGETS.map(t => {
+    const isApplied = applied.includes(t.name.toLowerCase());
+    return `<div style="font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid ${isApplied ? '#1a5c3a' : 'var(--border)'};
+      background:${isApplied ? 'var(--green-bg)' : 'var(--bg3)'};color:${isApplied ? 'var(--green)' : 'var(--text2)'};">
+      ${isApplied ? '✓ ' : ''}${t.name} <span style="color:var(--text3);font-size:10px;">${t.type}</span>
+    </div>`;
+  }).join('');
+}
+
+function checkFollowups() {
+  const apps = getApps();
+  const now = Date.now();
+  const stale = apps.filter(a => a.status === 'applied' && (now - a.updatedAt) > 7 * 24 * 60 * 60 * 1000).length;
+  const el = document.getElementById('followup-count');
+  if (el) el.textContent = stale > 0 ? `⚠️ ${stale} application(s) need follow-up (>7 days)` : '';
+}
+
+function render() {
+  renderStats();
+  renderTargets();
+  checkFollowups();
+
+  let apps = getApps();
+  const statusFilter = document.getElementById('filter-status').value;
+  const typeFilter = document.getElementById('filter-type').value;
+  const search = document.getElementById('search').value.toLowerCase();
+
+  if (statusFilter) apps = apps.filter(a => a.status === statusFilter);
+  if (typeFilter) apps = apps.filter(a => a.type === typeFilter);
+  if (search) apps = apps.filter(a => a.company.toLowerCase().includes(search) || a.role.toLowerCase().includes(search));
+
+  if (!apps.length) {
+    document.getElementById('apps-list').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No applications yet. Start applying — aim for 5 per day.</div>';
+    return;
+  }
+
+  document.getElementById('apps-list').innerHTML = apps.map(a => {
+    const st = STATUS_LABELS[a.status] || { label: a.status, cls: 'badge-gray' };
+    const now = Date.now();
+    const isStale = a.status === 'applied' && (now - a.updatedAt) > 7 * 24 * 60 * 60 * 1000;
+    return `
+    <div class="entry-card" style="${isStale ? 'border-color:#4a3010;' : ''}">
+      <div class="entry-head">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:14px;font-weight:600;color:var(--text);">${a.company}</span>
+          <span class="badge badge-gray">${a.role}</span>
+          <span class="badge ${st.cls}">${st.label}</span>
+          <span class="badge badge-gray">${a.type}</span>
+          ${isStale ? '<span class="badge badge-amber">Follow up!</span>' : ''}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteApp(${a.id})">Delete</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--text3);">Applied ${a.dateLabel}</span>
+        ${a.platform ? `<span style="font-size:12px;color:var(--text3);">via ${a.platform}</span>` : ''}
+        ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="font-size:12px;">View posting ↗</a>` : ''}
+      </div>
+      ${a.notes ? `<div class="entry-body" style="margin-bottom:8px;">${a.notes}</div>` : ''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${Object.entries(STATUS_LABELS).map(([k,v]) =>
+          `<button class="btn btn-sm ${a.status===k ? 'btn-primary' : ''}" onclick="updateStatus(${a.id},'${k}')">${v.label}</button>`
+        ).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+render();
+</script>
+</body>
+</html>

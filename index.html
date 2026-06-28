@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXUS leveling — Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">⚡ <span>NEXUS</span>leveling</div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-links">
+    <a href="index.html" class="active">Dashboard</a>
+    <a href="log.html">Daily Log</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="resources.html">Resources</a>
+    <a href="flashcards.html">Flashcards</a>
+    <a href="projects.html">Projects</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="cheatsheet.html">Cheatsheet</a>
+  </div>
+  <div class="nav-right">
+    <div class="streak-pill" id="streak-pill">🔥 0d streak</div>
+  </div>
+</nav>
+
+<div class="page">
+  <div id="why-banner" style="display:none; background:var(--accent-bg); border:1px solid var(--accent2); border-radius:var(--radius); padding:12px 16px; margin-bottom:1.5rem; font-size:13px; color:var(--text2);">
+    <span style="color:var(--text3); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Why you're doing this</span><br>
+    <span id="why-text" style="color:var(--text); font-weight:500;"></span>
+  </div>
+
+  <div id="why-setup" style="background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <span style="font-size:13px; color:var(--text2); flex:1;">Set your goal so it shows every day on this dashboard</span>
+    <input type="text" id="why-input" placeholder="e.g. Land a DevOps job at Razorpay by July 2027" style="flex:2; min-width:220px;">
+    <button class="btn btn-primary btn-sm" onclick="saveWhy()">Save goal</button>
+  </div>
+
+  <div class="backup-banner">
+    <div class="backup-info">💾 <strong>Your data lives in this browser only.</strong> Export a backup regularly so you don't lose progress.</div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button class="btn btn-green btn-sm" onclick="downloadBackup()">⬇ Download backup</button>
+      <button class="btn btn-sm" onclick="triggerImport()">⬆ Import backup</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">90-day activity</div>
+      <div class="heatmap" id="heatmap"></div>
+      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; font-size:11px; color:var(--text3);">
+        <span>Less</span>
+        <div style="width:12px;height:12px;border-radius:2px;background:var(--bg3);border:1px solid var(--border);"></div>
+        <div style="width:12px;height:12px;border-radius:2px;background:#1a5c3a;"></div>
+        <div style="width:12px;height:12px;border-radius:2px;background:#25a05f;"></div>
+        <div style="width:12px;height:12px;border-radius:2px;background:var(--green);"></div>
+        <span>More</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0;">Built vs watched ratio</div>
+      <div style="position:relative; height:160px;">
+        <canvas id="ratio-chart"></canvas>
+      </div>
+      <div id="ratio-legend" style="margin-top:10px; font-size:12px; color:var(--text2); text-align:center;"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Roadmap progress</div>
+    <div id="phase-progress"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+      <div class="section-title" style="margin-top:0; margin-bottom:0;">Recent entries</div>
+      <a href="log.html" class="btn btn-sm">View all →</a>
+    </div>
+    <div id="recent-entries"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="margin-top:0;">Weekly topics learned</div>
+    <div style="position:relative; height:180px;">
+      <canvas id="weekly-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+function saveWhy() {
+  const val = document.getElementById('why-input').value.trim();
+  if (!val) return;
+  S.set(KEYS.why, val);
+  renderWhy();
+  toast('Goal saved!', 'success');
+}
+
+function renderWhy() {
+  const why = S.get(KEYS.why);
+  document.getElementById('why-banner').style.display = why ? 'block' : 'none';
+  document.getElementById('why-setup').style.display = why ? 'none' : 'flex';
+  if (why) document.getElementById('why-text').textContent = why;
+}
+
+function renderStats() {
+  const entries = S.get(KEYS.entries) || [];
+  const streak = calcStreak(entries);
+  const longest = calcLongestStreak(entries);
+  const built = entries.filter(e => e.built).length;
+  const total = entries.length;
+  const pct = total ? Math.round(built / total * 100) : 0;
+  const prog = getRoadmapProgress();
+  const apps = S.get(KEYS.apps) || [];
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Current streak</div><div class="stat-val" style="color:var(--amber);">${streak}d</div><div class="stat-sub">Best: ${longest}d</div></div>
+    <div class="stat-card"><div class="stat-label">Days logged</div><div class="stat-val">${total}</div><div class="stat-sub">Keep going</div></div>
+    <div class="stat-card"><div class="stat-label">Built something</div><div class="stat-val" style="color:var(--green);">${pct}%</div><div class="stat-sub">${built} of ${total} days</div></div>
+    <div class="stat-card"><div class="stat-label">Roadmap done</div><div class="stat-val" style="color:var(--accent);">${prog.pct}%</div><div class="stat-sub">${prog.completed}/${prog.total} topics</div></div>
+    <div class="stat-card"><div class="stat-label">Jobs applied</div><div class="stat-val">${apps.length}</div><div class="stat-sub">Target: 50+</div></div>
+    <div class="stat-card"><div class="stat-label">Flashcard score</div><div class="stat-val" style="color:var(--purple);">${getFlashScore()}%</div><div class="stat-sub">Keep reviewing</div></div>
+  `;
+}
+
+function getFlashScore() {
+  const scores = S.get(KEYS.cards) || {};
+  const vals = Object.values(scores);
+  if (!vals.length) return 0;
+  const know = vals.filter(v => v === 'know').length;
+  return Math.round(know / vals.length * 100);
+}
+
+function renderHeatmap() {
+  const entries = S.get(KEYS.entries) || [];
+  const byDate = {};
+  entries.forEach(e => {
+    byDate[e.date] = (byDate[e.date] || 0) + (e.built ? 2 : 1);
+  });
+  const cells = [];
+  const today = new Date();
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const val = byDate[key] || 0;
+    const cls = val === 0 ? '' : val === 1 ? 'l1' : val === 2 ? 'l2' : val <= 4 ? 'l3' : 'l4';
+    cells.push(`<div class="heatmap-cell ${cls}" title="${key}: ${val} activity"></div>`);
+  }
+  document.getElementById('heatmap').innerHTML = cells.join('');
+}
+
+function renderRatioChart() {
+  const entries = S.get(KEYS.entries) || [];
+  const built = entries.filter(e => e.built).length;
+  const watched = entries.length - built;
+  const ctx = document.getElementById('ratio-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Built something', 'Watch only'],
+      datasets: [{ data: [built || 1, watched], backgroundColor: ['#3ecf8e', '#2a3148'], borderWidth: 0 }]
+    },
+    options: {
+      cutout: '72%',
+      plugins: { legend: { display: false } },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+  document.getElementById('ratio-legend').innerHTML =
+    `<span style="color:var(--green);">■</span> Built: ${built} &nbsp; <span style="color:var(--text3);">■</span> Watch-only: ${watched}`;
+}
+
+function renderPhaseProgress() {
+  const done = S.get(KEYS.roadmap) || {};
+  const html = ROADMAP.map(p => {
+    const count = (done[p.id] || []).length;
+    const total = p.topics.length;
+    const pct = Math.round(count / total * 100);
+    const color = pct === 100 ? 'green' : pct > 0 ? '' : '';
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:13px;color:var(--text);">${p.label}</span>
+          <span style="font-size:12px;color:var(--text2);">${count}/${total}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill ${color}" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('phase-progress').innerHTML = html;
+}
+
+function renderWeeklyChart() {
+  const entries = S.get(KEYS.entries) || [];
+  const weeks = {};
+  entries.forEach(e => {
+    const d = new Date(e.date);
+    const weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - d.getDay());
+    const key = weekStart.toISOString().split('T')[0];
+    weeks[key] = (weeks[key] || 0) + 1;
+  });
+  const labels = Object.keys(weeks).sort().slice(-8).map(k => {
+    const d = new Date(k);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  });
+  const data = Object.keys(weeks).sort().slice(-8).map(k => weeks[k]);
+  const ctx = document.getElementById('weekly-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Topics logged', data, backgroundColor: '#1a3a7a', borderColor: '#4f8ef7', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#555e7a', font: { size: 11 } }, grid: { color: '#2a3148' } },
+        y: { ticks: { color: '#555e7a', font: { size: 11 }, stepSize: 1 }, grid: { color: '#2a3148' } }
+      },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+}
+
+function renderRecent() {
+  const entries = (S.get(KEYS.entries) || []).slice(0, 3);
+  if (!entries.length) {
+    document.getElementById('recent-entries').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No entries yet. <a href="log.html">Log your first day →</a></div>';
+    return;
+  }
+  document.getElementById('recent-entries').innerHTML = entries.map(e => `
+    <div class="entry-card">
+      <div class="entry-head">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="badge badge-gray">${e.date}</span>
+          <span class="badge badge-blue">${e.phase}</span>
+          ${e.built ? '<span class="badge badge-green">Built ✓</span>' : ''}
+        </div>
+      </div>
+      <div class="entry-topic">${e.topic}</div>
+      <div class="entry-body">${e.learned.substring(0, 120)}${e.learned.length > 120 ? '...' : ''}</div>
+    </div>`).join('');
+}
+
+renderWhy();
+renderStats();
+renderHeatmap();
+renderRatioChart();
+renderPhaseProgress();
+renderWeeklyChart();
+renderRecent();
+</script>
+</body>
+</html>

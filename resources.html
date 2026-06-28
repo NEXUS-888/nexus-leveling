@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXUS leveling — Resources</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <div class="nav-brand">⚡ <span>NEXUS</span>leveling</div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="log.html">Daily Log</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="resources.html" class="active">Resources</a>
+    <a href="flashcards.html">Flashcards</a>
+    <a href="projects.html">Projects</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="cheatsheet.html">Cheatsheet</a>
+  </div>
+  <div class="nav-right"><div class="streak-pill" id="streak-pill">🔥 0d streak</div></div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Resources</h1>
+    <p>Every link from your roadmap. Mark visited as you use them.</p>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
+    <select id="filter-phase" onchange="render()" style="font-size:13px;padding:7px 10px;">
+      <option value="">All phases</option>
+      <option>Week 1</option><option>Week 2</option><option>Week 3</option><option>Week 4</option>
+      <option>Month 2</option><option>Month 3-4</option><option>Month 5</option>
+      <option>Month 6</option><option>Month 7-8</option><option>Month 9-10</option><option>General</option>
+    </select>
+    <select id="filter-type" onchange="render()" style="font-size:13px;padding:7px 10px;">
+      <option value="">All types</option>
+      <option>Video</option><option>Course</option><option>Lab</option><option>Docs</option><option>Book</option><option>Practice</option>
+    </select>
+    <label class="toggle-wrap" style="margin-left:auto;">
+      <div class="toggle-track" id="hide-visited" onclick="toggleHideVisited()"><div class="toggle-knob"></div></div>
+      Hide visited
+    </label>
+    <button class="btn btn-sm" onclick="clearVisited()">Reset visited</button>
+  </div>
+
+  <div id="stats-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;"></div>
+
+  <div id="resources-list"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+let hideVisited = false;
+
+function getVisited() { return S.get(KEYS.resources) || []; }
+
+function toggleVisited(id) {
+  let visited = getVisited();
+  if (visited.includes(id)) visited = visited.filter(v => v !== id);
+  else visited.push(id);
+  S.set(KEYS.resources, visited);
+  render();
+}
+
+function toggleHideVisited() {
+  hideVisited = !hideVisited;
+  document.getElementById('hide-visited').classList.toggle('on', hideVisited);
+  render();
+}
+
+function clearVisited() {
+  S.del(KEYS.resources);
+  render();
+  toast('Visited reset.');
+}
+
+function renderStats() {
+  const visited = getVisited();
+  const free = RESOURCES.filter(r => r.free).length;
+  const paid = RESOURCES.filter(r => !r.free).length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card" style="padding:.75rem 1rem;">
+      <div class="stat-label">Total resources</div>
+      <div class="stat-val" style="font-size:20px;">${RESOURCES.length}</div>
+    </div>
+    <div class="stat-card" style="padding:.75rem 1rem;">
+      <div class="stat-label">Visited</div>
+      <div class="stat-val" style="font-size:20px;color:var(--green);">${visited.length}</div>
+    </div>
+    <div class="stat-card" style="padding:.75rem 1rem;">
+      <div class="stat-label">Free</div>
+      <div class="stat-val" style="font-size:20px;color:var(--accent);">${free}</div>
+    </div>
+    <div class="stat-card" style="padding:.75rem 1rem;">
+      <div class="stat-label">Paid</div>
+      <div class="stat-val" style="font-size:20px;color:var(--amber);">${paid}</div>
+    </div>`;
+}
+
+function render() {
+  renderStats();
+  const visited = getVisited();
+  const phaseFilter = document.getElementById('filter-phase').value;
+  const typeFilter = document.getElementById('filter-type').value;
+
+  let filtered = RESOURCES;
+  if (phaseFilter) filtered = filtered.filter(r => r.phase === phaseFilter);
+  if (typeFilter) filtered = filtered.filter(r => r.type === typeFilter);
+  if (hideVisited) filtered = filtered.filter(r => !visited.includes(r.id));
+
+  if (!filtered.length) {
+    document.getElementById('resources-list').innerHTML = '<div class="empty"><div class="empty-icon">🔗</div>No resources match your filters.</div>';
+    return;
+  }
+
+  const typeColors = { Video:'badge-blue', Course:'badge-green', Lab:'badge-purple', Docs:'badge-gray', Book:'badge-amber', Practice:'badge-amber' };
+
+  document.getElementById('resources-list').innerHTML = filtered.map(r => {
+    const isVisited = visited.includes(r.id);
+    return `
+    <div class="resource-card ${isVisited ? 'resource-visited' : ''}">
+      <div class="resource-icon">${r.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <a href="${r.url}" target="_blank" rel="noopener" style="font-size:14px;font-weight:600;color:var(--text);">${r.name}</a>
+          <span class="badge ${typeColors[r.type] || 'badge-gray'}">${r.type}</span>
+          <span class="badge ${r.free ? 'badge-green' : 'badge-amber'}">${r.free ? 'Free' : 'Paid'}</span>
+          <span class="badge badge-gray">${r.phase}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2);">${r.desc}</div>
+      </div>
+      <button class="btn btn-sm ${isVisited ? 'btn-green' : ''}" onclick="toggleVisited('${r.id}')">
+        ${isVisited ? '✓ Visited' : 'Mark visited'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// Auto-filter from URL query param (linked from Roadmap page)
+const urlPhase = new URLSearchParams(location.search).get('phase');
+if (urlPhase) {
+  const sel = document.getElementById('filter-phase');
+  for (const opt of sel.options) {
+    if (opt.value === urlPhase || opt.textContent === urlPhase) { sel.value = opt.value; break; }
+  }
+}
+
+render();
+</script>
+</body>
+</html>

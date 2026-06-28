@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXUS leveling — Daily Log</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <div class="nav-brand">⚡ <span>NEXUS</span>leveling</div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="log.html" class="active">Daily Log</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="resources.html">Resources</a>
+    <a href="flashcards.html">Flashcards</a>
+    <a href="projects.html">Projects</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="cheatsheet.html">Cheatsheet</a>
+  </div>
+  <div class="nav-right"><div class="streak-pill" id="streak-pill">🔥 0d streak</div></div>
+</nav>
+
+<div class="page-sm">
+  <div class="page-header">
+    <h1>Daily Log</h1>
+    <p>Log what you learned and what you built. No building = no progress.</p>
+  </div>
+
+  <!-- TUTORIAL HELL WARNING -->
+  <div id="hell-warning" style="display:none; background:var(--amber-bg); border:1px solid #4a3010; border-radius:var(--radius); padding:12px 16px; margin-bottom:1rem; font-size:13px; color:var(--amber);">
+    ⚠️ You've logged 3+ days without building anything. Close the tutorial. Open the terminal.
+  </div>
+
+  <!-- LOG FORM -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Today's entry</div>
+
+    <div class="form-row">
+      <div>
+        <label>Phase</label>
+        <select id="phase-sel" onchange="updateTopics()"></select>
+      </div>
+      <div>
+        <label>Topic</label>
+        <select id="topic-sel"></select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Custom topic (optional override)</label>
+      <input type="text" id="custom-topic" placeholder="e.g. iptables deep dive">
+    </div>
+
+    <div class="form-group">
+      <label>What I learned *</label>
+      <textarea id="learned" placeholder="Key concepts, commands, ideas you understood today..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>What I built / did hands-on *</label>
+      <textarea id="built-txt" placeholder="Commands ran, errors fixed, project progress... (required)"></textarea>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label style="margin-bottom:8px;">Tutorial time tracker</label>
+      <div class="form-row">
+        <div>
+          <label>Minutes watched</label>
+          <input type="number" id="watch-mins" placeholder="0" min="0">
+        </div>
+        <div>
+          <label>Minutes coding / building</label>
+          <input type="number" id="code-mins" placeholder="0" min="0">
+        </div>
+      </div>
+      <div id="time-ratio-bar" style="display:none; margin-top:6px;"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Blockers / questions</label>
+      <input type="text" id="blockers" placeholder="Stuck on something? What exactly?">
+    </div>
+
+    <div class="toggle-wrap" style="margin-bottom:16px;" onclick="toggleBuilt()">
+      <div class="toggle-track" id="built-toggle"><div class="toggle-knob"></div></div>
+      <span>I built / deployed something today (not just watched)</span>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="addEntry()">✓ Log today</button>
+      <button class="btn" onclick="clearForm()">Clear</button>
+      <button class="btn" onclick="exportNotion()">↗ Export to Notion</button>
+    </div>
+  </div>
+
+  <!-- EXPORT BOX -->
+  <div class="card" id="export-card" style="display:none; margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Notion export — paste into any Notion page</div>
+    <textarea class="code-block" id="export-box" readonly style="min-height:200px; width:100%; font-size:11px;"></textarea>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="btn btn-primary btn-sm" onclick="copyExport()">Copy to clipboard</button>
+      <button class="btn btn-sm" onclick="document.getElementById('export-card').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <!-- ENTRIES LIST -->
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+    <div class="section-title" style="margin-top:0; margin-bottom:0;">All entries (<span id="entry-count">0</span>)</div>
+    <div style="display:flex; gap:8px;">
+      <select id="filter-phase" onchange="renderEntries()" style="font-size:12px; padding:5px 8px;">
+        <option value="">All phases</option>
+      </select>
+      <button class="btn btn-danger btn-sm" onclick="clearAll()">Clear all</button>
+    </div>
+  </div>
+
+  <div id="entries-list"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+let builtToday = false;
+
+function initForm() {
+  const phaseSel = document.getElementById('phase-sel');
+  ROADMAP.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = `${p.phase} — ${p.label}`;
+    phaseSel.appendChild(o);
+  });
+
+  const filterSel = document.getElementById('filter-phase');
+  ROADMAP.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = `${p.label}`;
+    filterSel.appendChild(o);
+  });
+
+  updateTopics();
+}
+
+function updateTopics() {
+  const phaseId = document.getElementById('phase-sel').value;
+  const phase = ROADMAP.find(p => p.id === phaseId);
+  const sel = document.getElementById('topic-sel');
+  sel.innerHTML = '';
+  if (phase) {
+    phase.topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      sel.appendChild(o);
+    });
+  }
+}
+
+function toggleBuilt() {
+  builtToday = !builtToday;
+  document.getElementById('built-toggle').classList.toggle('on', builtToday);
+}
+
+document.getElementById('watch-mins').addEventListener('input', updateTimeRatio);
+document.getElementById('code-mins').addEventListener('input', updateTimeRatio);
+
+function updateTimeRatio() {
+  const watch = parseInt(document.getElementById('watch-mins').value) || 0;
+  const code = parseInt(document.getElementById('code-mins').value) || 0;
+  const total = watch + code;
+  const bar = document.getElementById('time-ratio-bar');
+  if (!total) { bar.style.display = 'none'; return; }
+  const watchPct = Math.round(watch / total * 100);
+  const codePct = 100 - watchPct;
+  bar.style.display = 'block';
+  const warn = watchPct > codePct;
+  bar.innerHTML = `
+    <div style="display:flex; border-radius:4px; overflow:hidden; height:8px; margin-bottom:4px;">
+      <div style="width:${codePct}%; background:var(--green);"></div>
+      <div style="width:${watchPct}%; background:${warn ? 'var(--amber)' : 'var(--border2)'};"></div>
+    </div>
+    <div style="font-size:11px; color:${warn ? 'var(--amber)' : 'var(--text3)'};">
+      ${warn ? '⚠️ More watching than building. Close the tutorial.' : `✓ ${codePct}% building — good ratio.`}
+    </div>`;
+}
+
+function checkTutorialHell() {
+  const entries = S.get(KEYS.entries) || [];
+  const recent = entries.slice(0, 3);
+  const allWatch = recent.length >= 3 && recent.every(e => !e.built);
+  document.getElementById('hell-warning').style.display = allWatch ? 'block' : 'none';
+}
+
+function addEntry() {
+  const learned = document.getElementById('learned').value.trim();
+  const builtTxt = document.getElementById('built-txt').value.trim();
+  if (!learned) { toast('Fill in what you learned.', 'warning'); return; }
+  if (!builtTxt) { toast('What did you build? (required — no skipping)', 'warning'); return; }
+
+  const custom = document.getElementById('custom-topic').value.trim();
+  const phaseId = document.getElementById('phase-sel').value;
+  const phase = ROADMAP.find(p => p.id === phaseId);
+  const topic = custom || document.getElementById('topic-sel').value;
+  const blockers = document.getElementById('blockers').value.trim();
+  const watchMins = parseInt(document.getElementById('watch-mins').value) || 0;
+  const codeMins = parseInt(document.getElementById('code-mins').value) || 0;
+
+  const entry = {
+    id: Date.now(),
+    date: todayStr(),
+    dateLabel: fmtDate(Date.now()),
+    phase: phase ? `${phase.phase} — ${phase.label}` : phaseId,
+    phaseId,
+    topic,
+    learned,
+    builtTxt,
+    built: builtToday,
+    blockers,
+    watchMins,
+    codeMins
+  };
+
+  const entries = S.get(KEYS.entries) || [];
+  entries.unshift(entry);
+  S.set(KEYS.entries, entries);
+
+  clearForm();
+  checkTutorialHell();
+  renderEntries();
+  updateStreakPill();
+  toast('Entry logged! 🎉', 'success');
+}
+
+function clearForm() {
+  ['learned','built-txt','blockers','custom-topic'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('watch-mins').value = '';
+  document.getElementById('code-mins').value = '';
+  document.getElementById('time-ratio-bar').style.display = 'none';
+  builtToday = false;
+  document.getElementById('built-toggle').classList.remove('on');
+}
+
+function deleteEntry(id) {
+  let entries = S.get(KEYS.entries) || [];
+  entries = entries.filter(e => e.id !== id);
+  S.set(KEYS.entries, entries);
+  renderEntries();
+  updateStreakPill();
+  toast('Entry deleted.');
+}
+
+function renderEntries() {
+  let entries = S.get(KEYS.entries) || [];
+  const filterPhase = document.getElementById('filter-phase').value;
+  if (filterPhase) entries = entries.filter(e => e.phaseId === filterPhase);
+  document.getElementById('entry-count').textContent = entries.length;
+
+  if (!entries.length) {
+    document.getElementById('entries-list').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No entries yet. Log your first day above.</div>';
+    return;
+  }
+
+  document.getElementById('entries-list').innerHTML = entries.map(e => {
+    const ratio = e.watchMins || e.codeMins
+      ? `<span style="font-size:11px;color:var(--text3);">⏱ ${e.codeMins}m building / ${e.watchMins}m watching</span>`
+      : '';
+    return `
+    <div class="entry-card">
+      <div class="entry-head">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <span class="badge badge-gray">${e.dateLabel}</span>
+          <span class="badge badge-blue">${e.phase}</span>
+          ${e.built ? '<span class="badge badge-green">Built ✓</span>' : '<span class="badge badge-gray">Watch only</span>'}
+          ${ratio}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry(${e.id})">Delete</button>
+      </div>
+      <div class="entry-topic">${e.topic}</div>
+      <div class="entry-body"><strong>Learned:</strong> ${e.learned}</div>
+      <div class="entry-body"><strong>Built:</strong> ${e.builtTxt}</div>
+      ${e.blockers ? `<div class="entry-body"><strong>Blocker:</strong> ${e.blockers}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function exportNotion() {
+  const entries = S.get(KEYS.entries) || [];
+  if (!entries.length) { toast('No entries to export.', 'warning'); return; }
+  const lines = ['# NEXUS leveling — Learning Log', '', '---', ''];
+  entries.forEach(e => {
+    lines.push(`## ${e.dateLabel} — ${e.topic}`);
+    lines.push(`**Phase:** ${e.phase}`);
+    lines.push(`**Learned:** ${e.learned}`);
+    lines.push(`**Built:** ${e.builtTxt}`);
+    if (e.blockers) lines.push(`**Blockers:** ${e.blockers}`);
+    if (e.watchMins || e.codeMins) lines.push(`**Time:** ${e.codeMins}m building / ${e.watchMins}m watching`);
+    lines.push(`**Built something:** ${e.built ? 'Yes ✓' : 'No'}`);
+    lines.push('', '---', '');
+  });
+  document.getElementById('export-box').value = lines.join('\n');
+  document.getElementById('export-card').style.display = 'block';
+  document.getElementById('export-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyExport() {
+  const box = document.getElementById('export-box');
+  box.select();
+  document.execCommand('copy');
+  toast('Copied to clipboard!', 'success');
+}
+
+function clearAll() {
+  if (!confirm('Delete all entries? This cannot be undone.')) return;
+  S.del(KEYS.entries);
+  renderEntries();
+  updateStreakPill();
+  toast('All entries cleared.');
+}
+
+initForm();
+checkTutorialHell();
+renderEntries();
+</script>
+</body>
+</html>

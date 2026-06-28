@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEXUS leveling — Cheatsheet</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <div class="nav-brand">⚡ <span>NEXUS</span>leveling</div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="log.html">Daily Log</a>
+    <a href="roadmap.html">Roadmap</a>
+    <a href="resources.html">Resources</a>
+    <a href="flashcards.html">Flashcards</a>
+    <a href="projects.html">Projects</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="cheatsheet.html" class="active">Cheatsheet</a>
+  </div>
+  <div class="nav-right"><div class="streak-pill" id="streak-pill">🔥 0d streak</div></div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Command Cheatsheet</h1>
+    <p>Your personal reference. Add commands as you learn them. Search instantly.</p>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
+    <input type="text" id="search" oninput="render()" placeholder="Search commands, descriptions..." style="flex:1;min-width:200px;">
+    <select id="filter-cat" onchange="render()" style="font-size:13px;padding:7px 10px;">
+      <option value="">All categories</option>
+    </select>
+    <span style="font-size:12px;color:var(--text3);" id="cmd-count"></span>
+  </div>
+
+  <!-- ADD COMMAND FORM -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Add a command</div>
+    <div class="form-row three">
+      <div>
+        <label>Command *</label>
+        <input type="text" id="cmd-input" placeholder="find / -name '*.py'" style="font-family:var(--font-mono);">
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="cmd-cat">
+          <option>Linux</option><option>Docker</option><option>Kubernetes</option>
+          <option>Git</option><option>AWS CLI</option><option>Terraform</option>
+          <option>Bash</option><option>Networking</option><option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Tags (comma separated)</label>
+        <input type="text" id="cmd-tags" placeholder="files, search, find">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>What it does *</label>
+      <input type="text" id="cmd-desc" placeholder="Find all .py files on the system, suppressing permission errors">
+    </div>
+    <div class="form-group">
+      <label>Example output / notes</label>
+      <input type="text" id="cmd-notes" placeholder="Output: /home/vishal/project/app.py ...">
+    </div>
+    <button class="btn btn-primary" onclick="addCmd()">+ Add command</button>
+  </div>
+
+  <!-- BUILT-IN REFERENCE -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="section-title" style="margin-top:0;margin-bottom:0;">Built-in reference (from your roadmap)</div>
+      <button class="btn btn-sm" onclick="loadBuiltins()" id="builtin-btn">Load built-in commands</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);">Click above to pre-load 40+ essential DevOps commands into your cheatsheet.</p>
+  </div>
+
+  <div id="cmds-list"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+const BUILTINS = [
+  { cmd: 'chmod 755 file', cat: 'Linux', desc: 'Set file permissions: owner=rwx, group=rx, others=rx', notes: '4=read, 2=write, 1=execute', tags: ['permissions','files'] },
+  { cmd: 'chown user:group file', cat: 'Linux', desc: 'Change file owner and group', notes: '', tags: ['permissions'] },
+  { cmd: 'find . -mtime -1', cat: 'Linux', desc: 'Find files modified in last 24 hours in current directory', notes: 'Use -mtime -7 for last week', tags: ['find','files'] },
+  { cmd: 'find / -name "*.py" 2>/dev/null', cat: 'Linux', desc: 'Find all Python files, suppress permission errors', notes: '2>/dev/null redirects stderr to /dev/null', tags: ['find','python'] },
+  { cmd: 'grep -r "pattern" /path', cat: 'Linux', desc: 'Recursively search for pattern in all files under path', notes: 'Add -i for case-insensitive', tags: ['search','grep'] },
+  { cmd: 'ps aux | grep nginx', cat: 'Linux', desc: 'List all processes and filter for nginx', notes: 'PID is column 2 in output', tags: ['processes'] },
+  { cmd: 'kill -9 PID', cat: 'Linux', desc: 'Force kill a process by PID (SIGKILL — no cleanup)', notes: 'Use kill PID first (SIGTERM) to allow graceful shutdown', tags: ['processes'] },
+  { cmd: 'systemctl enable --now nginx', cat: 'Linux', desc: 'Enable nginx to start on boot AND start it now', notes: 'Combines enable + start in one command', tags: ['systemd','services'] },
+  { cmd: 'journalctl -u nginx -f', cat: 'Linux', desc: 'Follow live logs for nginx service', notes: '-f = follow (live), -u = unit (service name)', tags: ['logs','systemd'] },
+  { cmd: 'ss -tulpn', cat: 'Linux', desc: 'Show all listening ports with process names', notes: 'Better than netstat. t=tcp, u=udp, l=listening, p=process, n=numeric', tags: ['networking','ports'] },
+  { cmd: 'curl -I https://example.com', cat: 'Linux', desc: 'Fetch only HTTP headers from a URL', notes: 'Useful to check status codes, redirects, server type', tags: ['networking','http'] },
+  { cmd: 'tar -czf archive.tar.gz /path', cat: 'Linux', desc: 'Create a compressed tar archive', notes: '-c=create, -z=gzip, -f=filename. Extract with -xzf', tags: ['files','archive'] },
+  { cmd: 'awk \'{print $1, $3}\' file.txt', cat: 'Linux', desc: 'Print columns 1 and 3 from a file', notes: '$1=first field, $NF=last field, FS sets delimiter', tags: ['awk','text'] },
+  { cmd: 'sed -i \'s/old/new/g\' file.txt', cat: 'Linux', desc: 'Replace all occurrences of "old" with "new" in file', notes: '-i edits file in place. Remove -i to preview output', tags: ['sed','text'] },
+  { cmd: 'tmux new -s session', cat: 'Linux', desc: 'Create new tmux session named "session"', notes: 'Detach: Ctrl+B then D. Reattach: tmux attach -t session', tags: ['tmux','sessions'] },
+  { cmd: 'docker build -t myapp:v1 .', cat: 'Docker', desc: 'Build Docker image tagged myapp:v1 from current directory', notes: '. means use Dockerfile in current directory', tags: ['build','image'] },
+  { cmd: 'docker run -d -p 8080:80 --name app myapp:v1', cat: 'Docker', desc: 'Run container in background, map port 8080→80, named app', notes: '-d=detached, -p=port mapping host:container', tags: ['run','container'] },
+  { cmd: 'docker exec -it container bash', cat: 'Docker', desc: 'Open interactive bash shell inside running container', notes: 'Use sh if bash not available', tags: ['exec','debug'] },
+  { cmd: 'docker logs -f container', cat: 'Docker', desc: 'Follow live logs from a container', notes: 'Add --tail 100 to see last 100 lines first', tags: ['logs'] },
+  { cmd: 'docker compose up -d', cat: 'Docker', desc: 'Start all services defined in docker-compose.yml in background', notes: 'Use --build to rebuild images first', tags: ['compose'] },
+  { cmd: 'docker system prune -a', cat: 'Docker', desc: 'Remove all unused containers, images, networks', notes: 'Warning: deletes everything not currently running', tags: ['cleanup'] },
+  { cmd: 'kubectl get pods -A', cat: 'Kubernetes', desc: 'List all pods across all namespaces', notes: '-n namespace to filter by namespace', tags: ['pods'] },
+  { cmd: 'kubectl describe pod podname', cat: 'Kubernetes', desc: 'Show detailed info about a pod including events/errors', notes: 'Best command for debugging pod failures', tags: ['debug','pods'] },
+  { cmd: 'kubectl logs podname -f', cat: 'Kubernetes', desc: 'Follow logs from a pod', notes: 'Add -c containername if pod has multiple containers', tags: ['logs','pods'] },
+  { cmd: 'kubectl apply -f manifest.yaml', cat: 'Kubernetes', desc: 'Create or update resources defined in YAML file', notes: 'Idempotent — safe to run multiple times', tags: ['deploy'] },
+  { cmd: 'kubectl rollout restart deploy/myapp', cat: 'Kubernetes', desc: 'Restart all pods in a deployment with zero downtime', notes: 'Triggers rolling restart, no downtime', tags: ['deploy','restart'] },
+  { cmd: 'kubectl port-forward svc/myapp 8080:80', cat: 'Kubernetes', desc: 'Forward local port 8080 to service port 80 for testing', notes: 'Useful for debugging services without exposing them', tags: ['debug','networking'] },
+  { cmd: 'git log --oneline --graph', cat: 'Git', desc: 'Show compact git history with branch graph', notes: 'Add -20 to limit to last 20 commits', tags: ['history'] },
+  { cmd: 'git stash && git pull && git stash pop', cat: 'Git', desc: 'Stash changes, pull latest, restore your changes', notes: 'Use when pull fails due to local changes', tags: ['stash','pull'] },
+  { cmd: 'git rebase -i HEAD~3', cat: 'Git', desc: 'Interactive rebase of last 3 commits (squash, reword, etc.)', notes: 'Use squash to combine commits before PR', tags: ['rebase','history'] },
+  { cmd: 'aws s3 cp file.txt s3://bucket/key', cat: 'AWS CLI', desc: 'Upload a file to S3', notes: 'Add --recursive to copy a directory', tags: ['s3','upload'] },
+  { cmd: 'aws ec2 describe-instances --region ap-south-1', cat: 'AWS CLI', desc: 'List all EC2 instances in Mumbai region', notes: 'Add --filters to narrow results', tags: ['ec2'] },
+  { cmd: 'aws sts get-caller-identity', cat: 'AWS CLI', desc: 'Show who you are authenticated as (account, ARN)', notes: 'First command to run to verify credentials work', tags: ['iam','auth'] },
+  { cmd: 'terraform init', cat: 'Terraform', desc: 'Initialize Terraform working directory, download providers', notes: 'Must run before plan or apply', tags: ['init'] },
+  { cmd: 'terraform plan -out=tfplan', cat: 'Terraform', desc: 'Preview what changes Terraform will make, save to file', notes: 'Always review plan before applying', tags: ['plan'] },
+  { cmd: 'terraform apply tfplan', cat: 'Terraform', desc: 'Apply the saved plan, making actual infrastructure changes', notes: 'Use terraform destroy to tear down', tags: ['apply'] },
+  { cmd: 'curl -s localhost:9090/metrics', cat: 'Networking', desc: 'Fetch Prometheus metrics from local exporter', notes: 'Standard Prometheus metrics endpoint', tags: ['prometheus','monitoring'] },
+  { cmd: 'ssh -i key.pem user@ip', cat: 'Networking', desc: 'SSH into server using private key file', notes: 'Key file must have chmod 400 permissions', tags: ['ssh'] },
+  { cmd: 'scp -i key.pem file user@ip:/path', cat: 'Networking', desc: 'Securely copy file to remote server', notes: 'Add -r for directories', tags: ['ssh','files'] },
+];
+
+function getCmds() { return S.get(KEYS.cmds) || []; }
+
+function addCmd() {
+  const cmd = document.getElementById('cmd-input').value.trim();
+  const desc = document.getElementById('cmd-desc').value.trim();
+  if (!cmd || !desc) { toast('Command and description required.', 'warning'); return; }
+
+  const entry = {
+    id: Date.now(),
+    cmd,
+    cat: document.getElementById('cmd-cat').value,
+    desc,
+    notes: document.getElementById('cmd-notes').value.trim(),
+    tags: document.getElementById('cmd-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+    added: fmtDate(Date.now()),
+  };
+
+  const cmds = getCmds();
+  cmds.unshift(entry);
+  S.set(KEYS.cmds, cmds);
+  ['cmd-input','cmd-desc','cmd-notes','cmd-tags'].forEach(id => document.getElementById(id).value = '');
+  render();
+  toast('Command saved!', 'success');
+}
+
+function loadBuiltins() {
+  const existing = getCmds();
+  const existingCmds = existing.map(c => c.cmd);
+  const toAdd = BUILTINS.filter(b => !existingCmds.includes(b.cmd)).map(b => ({ ...b, id: Date.now() + Math.random(), added: 'Built-in' }));
+  S.set(KEYS.cmds, [...toAdd, ...existing]);
+  document.getElementById('builtin-btn').textContent = `✓ Loaded ${toAdd.length} commands`;
+  document.getElementById('builtin-btn').disabled = true;
+  render();
+  toast(`${toAdd.length} commands loaded!`, 'success');
+}
+
+function deleteCmd(id) {
+  let cmds = getCmds();
+  cmds = cmds.filter(c => c.id !== id);
+  S.set(KEYS.cmds, cmds);
+  render();
+}
+
+function copyCmd(cmd) {
+  navigator.clipboard.writeText(cmd).then(() => toast('Copied!', 'success'));
+}
+
+function updateCatFilter() {
+  const cmds = getCmds();
+  const cats = [...new Set(cmds.map(c => c.cat))].sort();
+  const sel = document.getElementById('filter-cat');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All categories</option>';
+  cats.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    if (c === current) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function render() {
+  updateCatFilter();
+  let cmds = getCmds();
+  const search = document.getElementById('search').value.toLowerCase();
+  const cat = document.getElementById('filter-cat').value;
+
+  if (cat) cmds = cmds.filter(c => c.cat === cat);
+  if (search) cmds = cmds.filter(c =>
+    c.cmd.toLowerCase().includes(search) ||
+    c.desc.toLowerCase().includes(search) ||
+    (c.tags || []).some(t => t.toLowerCase().includes(search))
+  );
+
+  document.getElementById('cmd-count').textContent = `${cmds.length} commands`;
+
+  const catColors = {
+    Linux:'badge-blue', Docker:'badge-green', Kubernetes:'badge-purple',
+    Git:'badge-amber', 'AWS CLI':'badge-amber', Terraform:'badge-blue',
+    Bash:'badge-gray', Networking:'badge-gray', Other:'badge-gray'
+  };
+
+  if (!cmds.length) {
+    document.getElementById('cmds-list').innerHTML = '<div class="empty"><div class="empty-icon">⌨️</div>No commands yet. Load built-ins or add your own.</div>';
+    return;
+  }
+
+  // Group by category
+  const groups = {};
+  cmds.forEach(c => {
+    if (!groups[c.cat]) groups[c.cat] = [];
+    groups[c.cat].push(c);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([cat, items]) => {
+    html += `<div class="section-title">${cat} (${items.length})</div>`;
+    items.forEach(c => {
+      html += `
+      <div class="card-sm" style="margin-bottom:8px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+              <code style="font-family:var(--font-mono);font-size:13px;color:var(--teal);word-break:break-all;">${c.cmd}</code>
+              <span class="badge ${catColors[c.cat] || 'badge-gray'}">${c.cat}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">${c.desc}</div>
+            ${c.notes ? `<div style="font-size:12px;color:var(--text3);">💡 ${c.notes}</div>` : ''}
+            ${c.tags && c.tags.length ? `<div style="margin-top:6px;">${c.tags.map(t => `<span class="cmd-tag">${t}</span>`).join('')}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="copyCmd(${JSON.stringify(c.cmd)})">Copy</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCmd(${c.id})">✕</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('cmds-list').innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>
