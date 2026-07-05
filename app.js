@@ -825,45 +825,77 @@ document.addEventListener('click', function(e) {
       });
     }
 
-    // ── ENTRY ZOOM ANIMATION ──────────────────────────────
-    function handleEntryAnimation() {
+    // ── UNIFIED PAGE LOAD TRANSITION ENGINE ─────────────────
+    function handlePageLoadTransition() {
       const transitionInNode = sessionStorage.getItem('nexus-transition-in');
-      if (!transitionInNode) return;
-      sessionStorage.removeItem('nexus-transition-in');
+      
+      const isIndexPage = location.pathname.endsWith('index.html') || 
+                          location.pathname.endsWith('/') || 
+                          location.pathname === '' || 
+                          !location.pathname.includes('.html');
 
-      // Start with portal open on load during entry zoom
-      togglePortalMode(true);
+      if (transitionInNode) {
+        sessionStorage.removeItem('nexus-transition-in');
 
-      flash.style.opacity = 1;
-      const labels = document.querySelectorAll('.cyber-node-label');
-      labels.forEach(l => l.style.opacity = 0);
+        // Start with portal open during entry zoom
+        togglePortalMode(true);
 
-      camera.position.set(0, 0, 0.4);
+        flash.style.opacity = 1;
+        const labels = document.querySelectorAll('.cyber-node-label');
+        labels.forEach(l => l.style.opacity = 0);
 
-      const tl = gsap.timeline({
-        onComplete: () => {
-          // Auto-close portal to show page contents after exit zoom completes
-          setTimeout(() => {
-            togglePortalMode(false);
-          }, 300);
+        // Camera starts close inside the node
+        camera.position.set(0, 0, 0.4);
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            // Keep portal open on index landing, otherwise auto-close
+            if (!isIndexPage) {
+              setTimeout(() => {
+                togglePortalMode(false);
+              }, 250);
+            } else {
+              gsap.to(labels, { opacity: 1, duration: 0.3 });
+            }
+          }
+        });
+        tl.to(flash, {
+          opacity: 0,
+          duration: 0.6,
+          ease: 'power2.out'
+        })
+        .to(camera.position, {
+          x: 0,
+          y: 0,
+          z: 5,
+          duration: 0.8,
+          ease: 'power2.out'
+        }, '<')
+        .to(labels, {
+          opacity: 1,
+          duration: 0.4
+        });
+      } else {
+        // Cold load (direct visit or refresh)
+        const labels = document.querySelectorAll('.cyber-node-label');
+        if (isIndexPage) {
+          togglePortalMode(true);
+          camera.position.z = 4.2;
+          gsap.to(flash, {
+            opacity: 0,
+            duration: 0.5,
+            ease: 'power2.out'
+          });
+        } else {
+          togglePortalMode(false);
+          labels.forEach(l => l.style.opacity = 0);
+          gsap.to(flash, {
+            opacity: 0,
+            duration: 0.4,
+            ease: 'power2.out'
+          });
         }
-      });
-      tl.to(flash, {
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power2.out'
-      })
-      .to(camera.position, {
-        x: 0,
-        y: 0,
-        z: 5,
-        duration: 0.8,
-        ease: 'power2.out'
-      }, '<')
-      .to(labels, {
-        opacity: 1,
-        duration: 0.4
-      });
+      }
     }
 
     // ── PORTAL TOGGLE STATE MACHINE ───────────────────────
@@ -913,7 +945,7 @@ document.addEventListener('click', function(e) {
       navRight.insertBefore(toggleBtn, navRight.firstChild);
     }
 
-    handleEntryAnimation();
+    handlePageLoadTransition();
 
     // ── PERFORMANCE SAMPLER FALLBACK ──────────────────────
     function detectPerformanceTier() {
@@ -950,15 +982,7 @@ document.addEventListener('click', function(e) {
 
     detectPerformanceTier();
 
-    // Auto-open 3D Navigator on first open of the index page
-    const isIndexPage = location.pathname.endsWith('index.html') || 
-                        location.pathname.endsWith('/') || 
-                        location.pathname === '' || 
-                        !location.pathname.includes('.html');
-                         
-    if (isIndexPage && !sessionStorage.getItem('nexus-transition-in')) {
-      togglePortalMode(true);
-    }
+
 
     // ── DRAG-TO-SPIN CONTROL SYSTEM ──────────────────────────
     let isDragging = false;
