@@ -530,3 +530,131 @@ document.addEventListener('click', function(e) {
   btn.style.setProperty('--ripple-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
 });
 
+// ── 3D WEBGL ENGINE INJECTION ─────────────────────────────
+(function initGlobal3DBg() {
+  const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+
+  function loadScript(src, cb) {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  function start3D() {
+    // Create background canvas
+    const canvas = document.createElement('canvas');
+    canvas.id = 'nexus-3d-bg';
+    document.body.insertBefore(canvas, document.body.firstChild);
+
+    // Three.js Core
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Outer cyber-sphere (Cyan)
+    const outerGeo = new THREE.IcosahedronGeometry(1.8, 2);
+    const outerMat = new THREE.MeshBasicMaterial({
+      color: 0x00e5ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.08
+    });
+    const outerMesh = new THREE.Mesh(outerGeo, outerMat);
+    scene.add(outerMesh);
+
+    // Nodes (Magenta points at vertices)
+    const pointsMat = new THREE.PointsMaterial({
+      color: 0xff2d7a,
+      size: 0.05,
+      transparent: true,
+      opacity: 0.6
+    });
+    const nodes = new THREE.Points(outerGeo, pointsMat);
+    outerMesh.add(nodes);
+
+    // Inner core (Magenta)
+    const innerGeo = new THREE.IcosahedronGeometry(1.0, 1);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0xff2d7a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.04
+    });
+    const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+    scene.add(innerMesh);
+
+    // Animation variables
+    let mouseX = 0, mouseY = 0;
+    let targetX = 0, targetY = 0;
+    let scrollSpeed = 0;
+    let targetScrollSpeed = 0;
+
+    // Track mouse move for parallax
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 0.3;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 0.3;
+    });
+
+    // Track scroll
+    let lastScrollY = window.scrollY;
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.scrollY;
+      targetScrollSpeed = Math.abs(currentScroll - lastScrollY) * 0.015;
+      lastScrollY = currentScroll;
+    });
+
+    // Handle Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    // Render loop
+    const clock = new THREE.Clock();
+    function tick() {
+      const delta = clock.getDelta();
+
+      // Decay scroll speed impact
+      scrollSpeed += (targetScrollSpeed - scrollSpeed) * 0.05;
+      targetScrollSpeed *= 0.95;
+
+      // Base rotation + scroll velocity boost
+      outerMesh.rotation.y += (0.05 + scrollSpeed) * delta;
+      outerMesh.rotation.x += 0.02 * delta;
+
+      innerMesh.rotation.y -= (0.03 + scrollSpeed * 0.5) * delta;
+      innerMesh.rotation.x -= 0.01 * delta;
+
+      // Smooth mouse parallax
+      targetX += (mouseX - targetX) * 0.05;
+      targetY += (mouseY - targetY) * 0.05;
+
+      scene.rotation.y = targetX;
+      scene.rotation.x = targetY;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+
+    tick();
+  }
+
+  // Load Three.js dynamically if not already present
+  if (typeof THREE === 'undefined') {
+    loadScript(THREE_CDN, start3D);
+  } else {
+    start3D();
+  }
+})();
+
