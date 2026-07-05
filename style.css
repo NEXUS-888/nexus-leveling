@@ -813,13 +813,15 @@ select option { background: var(--bg2); }
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
   opacity: 0.12;
   transition: opacity 0.5s var(--transition);
 }
 
 .page, .page-sm {
+  position: relative;
+  z-index: 2;
   transition: opacity 0.5s var(--transition), filter 0.5s var(--transition), transform 0.5s var(--transition);
 }
 
