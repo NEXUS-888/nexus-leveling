@@ -97,10 +97,12 @@ const S = {
   set: (k, v) => {
     localStorage.setItem(k, JSON.stringify(v));
     if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).set(v).catch(console.error);
+    window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key: k, val: v } }));
   },
   del: k => {
     localStorage.removeItem(k);
     if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).remove().catch(console.error);
+    window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key: k } }));
   }
 };
 
@@ -325,6 +327,13 @@ function calcStreak(entries) {
   if (!entries || !entries.length) return 0;
   const days = [...new Set(entries.map(e => e.date))].sort().reverse();
   if (!days.length) return 0;
+
+  // Verify that the most recent entry was logged today or yesterday
+  const today = new Date(todayStr());
+  const mostRecent = new Date(days[0]);
+  const diffFromToday = (today - mostRecent) / (1000 * 60 * 60 * 24);
+  if (diffFromToday > 1.5) return 0; // Streak is broken
+
   let streak = 1;
   for (let i = 0; i < days.length - 1; i++) {
     const a = new Date(days[i]);
@@ -629,11 +638,25 @@ document.addEventListener('click', function(e) {
     return 'ONLINE';
   }
 
+  let libsFailed = false;
+  function onLibFailed(src) {
+    if (libsFailed) return;
+    libsFailed = true;
+    console.error("NEXUS 3D: Critical engine library failed to load: " + src);
+    const flash = document.getElementById('nexus-transition-overlay');
+    if (flash) {
+      flash.style.opacity = '0';
+      flash.style.pointerEvents = 'none';
+    }
+    document.body.classList.remove('portal-open');
+    document.body.classList.add('reduced-3d');
+  }
+
   function loadScript(src, cb) {
     const s = document.createElement('script');
     s.src = src;
     s.onload = cb;
-    s.onerror = (err) => console.error("NEXUS 3D: Script load failed: " + src, err);
+    s.onerror = () => onLibFailed(src);
     document.head.appendChild(s);
   }
 
@@ -805,6 +828,7 @@ document.addEventListener('click', function(e) {
 
     // ── PROJECTION & OCCLUSION LOGIC ────────────────────────
     function updateNodeScreenPositions() {
+      if (!portalActive) return;
       const width = window.innerWidth;
       const height = window.innerHeight;
 
@@ -1190,6 +1214,7 @@ document.addEventListener('click', function(e) {
   // Load Three.js & GSAP dynamically if not already present
   let libsLoaded = 0;
   function onLibLoaded() {
+    if (libsFailed) return;
     libsLoaded++;
     if (libsLoaded === 2) {
       start3D();

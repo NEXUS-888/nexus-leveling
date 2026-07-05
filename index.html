@@ -97,6 +97,9 @@
 
 <script src="app.js"></script>
 <script>
+let ratioChartInstance = null;
+let weeklyChartInstance = null;
+
 function saveWhy() {
   const val = document.getElementById('why-input').value.trim();
   if (!val) return;
@@ -162,8 +165,11 @@ function renderRatioChart() {
   const entries = S.get(KEYS.entries) || [];
   const built = entries.filter(e => e.built).length;
   const watched = entries.length - built;
-  const ctx = document.getElementById('ratio-chart').getContext('2d');
-  new Chart(ctx, {
+  const canvas = document.getElementById('ratio-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (ratioChartInstance) ratioChartInstance.destroy();
+  ratioChartInstance = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Built something', 'Watch only'],
@@ -215,8 +221,11 @@ function renderWeeklyChart() {
     return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
   });
   const data = Object.keys(weeks).sort().slice(-8).map(k => weeks[k]);
-  const ctx = document.getElementById('weekly-chart').getContext('2d');
-  new Chart(ctx, {
+  const canvas = document.getElementById('weekly-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (weeklyChartInstance) weeklyChartInstance.destroy();
+  weeklyChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
@@ -260,6 +269,18 @@ renderRatioChart();
 renderPhaseProgress();
 renderWeeklyChart();
 renderRecent();
+
+window.addEventListener('nexus-state-change', function(e) {
+  if (e.detail.key === KEYS.entries || e.detail.key === KEYS.roadmap || e.detail.key === KEYS.cards || e.detail.key === KEYS.apps || e.detail.key === KEYS.why) {
+    renderWhy();
+    renderStats();
+    renderHeatmap();
+    renderRatioChart();
+    renderPhaseProgress();
+    renderWeeklyChart();
+    renderRecent();
+  }
+});
 </script>
 </body>
 </html>
