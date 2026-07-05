@@ -51,12 +51,12 @@
 </nav>
 
 <div class="page-sm">
-  <div class="page-header">
+  <div class="page-header animate-in delay-1">
     <h1>Flashcards</h1>
     <p>20 cards covering Linux, AWS, Docker, K8s. Internship interviews tested on these.</p>
   </div>
 
-  <div class="stats-grid" id="card-stats" style="margin-bottom:1.5rem;"></div>
+  <div class="stats-grid animate-in delay-2" id="card-stats" style="margin-bottom:1.5rem;"></div>
 
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
     <select id="topic-filter" onchange="filterCards()" style="font-size:13px;padding:7px 10px;">
@@ -77,7 +77,7 @@
 
   <div class="progress-dots" id="progress-dots"></div>
 
-  <div class="flashcard-wrap" id="flashcard" onclick="flip()">
+  <div class="flashcard-wrap animate-in delay-3" id="flashcard" onclick="flip()">
     <div class="flashcard-inner">
       <div class="flashcard-front">
         <div class="card-topic" id="card-topic"></div>
@@ -111,7 +111,7 @@
     </div>
   </div>
 
-  <div class="card" style="margin-top:1.5rem;">
+  <div class="card animate-in delay-4" style="margin-top:1.5rem;">
     <div class="section-title" style="margin-top:0;">Add your own flashcard</div>
     <div class="form-group">
       <label>Topic</label>

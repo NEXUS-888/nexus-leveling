@@ -24,12 +24,12 @@
 </nav>
 
 <div class="page">
-  <div class="page-header">
+  <div class="page-header animate-in">
     <h1>Resources</h1>
     <p>Every link from your roadmap. Mark visited as you use them.</p>
   </div>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
+  <div class="animate-in delay-1" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
     <select id="filter-phase" onchange="render()" style="font-size:13px;padding:7px 10px;">
       <option value="">All phases</option>
       <option>Week 1</option><option>Week 2</option><option>Week 3</option><option>Week 4</option>
@@ -49,7 +49,7 @@
 
   <div id="stats-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;"></div>
 
-  <div id="resources-list"></div>
+  <div id="resources-list" class="animate-in delay-2"></div>
 </div>
 
 <script src="app.js"></script>

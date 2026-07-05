@@ -475,3 +475,58 @@ function deleteProject(id) {
   S.set(KEYS.projects, projects);
   return projects;
 }
+
+// ── SCROLL REVEAL ANIMATIONS ──────────────────────────────
+(function initScrollReveal() {
+  if (typeof IntersectionObserver === 'undefined') return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  // Observe on DOM ready
+  function observeAll() {
+    document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', observeAll);
+  } else {
+    observeAll();
+  }
+  // Re-observe after dynamic renders
+  window._scrollRevealObserver = observer;
+  window.observeAnimateIn = function() {
+    document.querySelectorAll('.animate-in:not(.visible)').forEach(el => observer.observe(el));
+  };
+})();
+
+// ── ANIMATED COUNTER ──────────────────────────────────────
+function animateCounter(el, target, duration) {
+  if (!el) return;
+  const start = 0;
+  const startTime = performance.now();
+  const suffix = el.dataset.suffix || '';
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (target - start) * eased) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// ── BUTTON RIPPLE EFFECT ──────────────────────────────────
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  btn.style.setProperty('--ripple-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+  btn.style.setProperty('--ripple-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+});
+
