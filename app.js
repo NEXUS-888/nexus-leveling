@@ -585,7 +585,8 @@ document.addEventListener('click', function(e) {
   }
 
   function start3D() {
-    const canvas = document.createElement('canvas');
+    try {
+      const canvas = document.createElement('canvas');
     canvas.id = 'nexus-3d-bg';
     document.body.insertBefore(canvas, document.body.firstChild);
 
