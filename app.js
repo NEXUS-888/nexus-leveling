@@ -495,7 +495,11 @@ function deleteProject(id) {
 
 // ── SCROLL REVEAL ANIMATIONS ──────────────────────────────
 (function initScrollReveal() {
-  if (typeof IntersectionObserver === 'undefined') return;
+  if (typeof IntersectionObserver === 'undefined') {
+    // Immediate fallback for environments without observer support
+    document.querySelectorAll('.animate-in').forEach(el => el.classList.add('visible'));
+    return;
+  }
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -508,6 +512,13 @@ function deleteProject(id) {
   // Observe on DOM ready
   function observeAll() {
     document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+    
+    // Failsafe timeout to force visibility if observer doesn't fire (e.g. inside iframe previews)
+    setTimeout(() => {
+      document.querySelectorAll('.animate-in:not(.visible)').forEach(el => {
+        el.classList.add('visible');
+      });
+    }, 850);
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', observeAll);
