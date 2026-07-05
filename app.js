@@ -533,6 +533,47 @@ document.addEventListener('click', function(e) {
 // ── 3D WEBGL ENGINE INJECTION ─────────────────────────────
 (function initGlobal3DBg() {
   const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  const GSAP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
+
+  // State Helpers for Data-Aware Nodes
+  function getLogStreak() {
+    const entries = S.get(KEYS.entries) || [];
+    return calcStreak(entries);
+  }
+  function getRoadmapPct() {
+    const progress = getRoadmapProgress();
+    return progress.pct;
+  }
+  function getFlashcardMastery() {
+    const scores = S.get(KEYS.cards) || {};
+    const vals = Object.values(scores);
+    if (!vals.length) return 0;
+    const know = vals.filter(v => v === 'know').length;
+    return Math.round(know / vals.length * 100);
+  }
+  function getJobAppCount() {
+    const apps = S.get(KEYS.apps) || [];
+    return apps.length;
+  }
+
+  const NODES = [
+    { id: 'dashboard', label: 'CORE_DASHBOARD', href: 'index.html', progress: null },
+    { id: 'log', label: 'DAILY_LOG', href: 'log.html', progress: getLogStreak() },
+    { id: 'roadmap', label: 'ROADMAP', href: 'roadmap.html', progress: getRoadmapPct() },
+    { id: 'resources', label: 'RESOURCES', href: 'resources.html', progress: null },
+    { id: 'flashcards', label: 'FLASHCARDS', href: 'flashcards.html', progress: getFlashcardMastery() },
+    { id: 'projects', label: 'PROJECTS', href: 'projects.html', progress: null },
+    { id: 'jobs', label: 'JOBS', href: 'jobs.html', progress: getJobAppCount() },
+    { id: 'cheatsheet', label: 'CHEATSHEET', href: 'cheatsheet.html', progress: null },
+  ];
+
+  function formatReadout(node) {
+    if (node.id === 'log' && node.progress) return `${node.progress}D_STREAK`;
+    if (node.id === 'roadmap' && node.progress) return `${node.progress}%_COMPLETED`;
+    if (node.id === 'flashcards' && node.progress) return `${node.progress}%_MASTERY`;
+    if (node.id === 'jobs' && node.progress) return `${node.progress}_APPLICATIONS`;
+    return 'ONLINE';
+  }
 
   function loadScript(src, cb) {
     const s = document.createElement('script');
@@ -547,7 +588,23 @@ document.addEventListener('click', function(e) {
     canvas.id = 'nexus-3d-bg';
     document.body.insertBefore(canvas, document.body.firstChild);
 
-    // Three.js Core
+    // Create HUD overlays
+    const overlay = document.createElement('div');
+    overlay.id = 'nexus-nodes-overlay';
+    document.body.appendChild(overlay);
+
+    const flash = document.createElement('div');
+    flash.id = 'nexus-transition-overlay';
+    document.body.appendChild(flash);
+
+    // SR-only screen-reader static navigation fallback
+    const staticNav = document.createElement('nav');
+    staticNav.className = 'sr-only';
+    staticNav.id = 'nexus-static-nav';
+    staticNav.innerHTML = NODES.map(n => `<a href="${n.href}">${n.label.replace('_', ' ')}</a>`).join('');
+    document.body.appendChild(staticNav);
+
+    // Three.js Core Setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.z = 5;
@@ -592,19 +649,233 @@ document.addEventListener('click', function(e) {
     const innerMesh = new THREE.Mesh(innerGeo, innerMat);
     scene.add(innerMesh);
 
+    // Create 3D Nodes Group for Orbit
+    const nodesGroup = new THREE.Group();
+    scene.add(nodesGroup);
+
+    // Add nodes in orbit around center sphere
+    NODES.forEach((node, index) => {
+      const theta = (index / NODES.length) * Math.PI * 2;
+      const radius = 2.5;
+
+      const nodeMesh = new THREE.Object3D();
+      nodeMesh.position.x = Math.cos(theta) * radius;
+      nodeMesh.position.y = Math.sin(theta) * (radius * 0.6);
+      nodeMesh.position.z = Math.sin(theta * 1.5) * 0.8;
+      nodesGroup.add(nodeMesh);
+      node.mesh = nodeMesh;
+
+      // Inject HTML Node button
+      const nodeEl = document.createElement('div');
+      nodeEl.className = 'cyber-node-label';
+      nodeEl.innerHTML = `
+        <div class="node-btn">
+          <svg class="node-progress-svg" viewBox="0 0 100 40">
+            <rect class="node-progress-rect" x="1.5" y="1.5" width="97" height="37" />
+          </svg>
+          ${node.label}
+        </div>
+        <div class="node-readout">> OFFLINE</div>
+      `;
+
+      // Set progress indicator ring
+      const rect = nodeEl.querySelector('.node-progress-rect');
+      if (rect) {
+        const perimeter = (97 + 37) * 2;
+        rect.style.strokeDasharray = perimeter;
+        if (node.progress !== null) {
+          const completion = node.progress / 100;
+          rect.style.strokeDashoffset = perimeter * (1 - completion);
+        } else {
+          // Standard links get full glow or none depending on status
+          rect.style.strokeDashoffset = 0;
+        }
+      }
+
+      overlay.appendChild(nodeEl);
+      node.el = nodeEl;
+
+      // Hover Readout with Typewriter
+      function typewriter(el, text) {
+        if (el._typeInterval) clearInterval(el._typeInterval);
+        el.textContent = '';
+        let i = 0;
+        el._typeInterval = setInterval(() => {
+          if (i < text.length) {
+            el.textContent += text[i];
+            i++;
+          } else {
+            clearInterval(el._typeInterval);
+          }
+        }, 25);
+      }
+
+      nodeEl.addEventListener('mouseenter', () => {
+        typewriter(nodeEl.querySelector('.node-readout'), `> ${formatReadout(node)}`);
+        // Highlight corresponding mesh temporarily
+        node.mesh.scale.set(1.5, 1.5, 1.5);
+      });
+
+      nodeEl.addEventListener('mouseleave', () => {
+        typewriter(nodeEl.querySelector('.node-readout'), '> OFFLINE');
+        node.mesh.scale.set(1, 1, 1);
+      });
+
+      // Navigation transition sequencing
+      let navState = 'idle';
+      nodeEl.addEventListener('click', () => {
+        if (navState !== 'idle') return;
+        navState = 'zooming';
+        overlay.style.pointerEvents = 'none';
+
+        const worldPos = new THREE.Vector3();
+        node.mesh.getWorldPosition(worldPos);
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            sessionStorage.setItem('nexus-transition-in', node.id);
+            window.location.href = node.href;
+          }
+        });
+
+        tl.to(camera.position, {
+          x: worldPos.x * 0.9,
+          y: worldPos.y * 0.9,
+          z: worldPos.z * 0.9,
+          duration: 0.8,
+          ease: 'power2.in',
+          onUpdate: () => {
+            camera.lookAt(worldPos);
+          }
+        })
+        .to('.cyber-node-label', {
+          opacity: 0,
+          scale: 0.5,
+          duration: 0.3
+        }, '<')
+        .to(flash, {
+          opacity: 1,
+          duration: 0.3
+        }, '-=0.2');
+      });
+    });
+
+    // ── PROJECTION & OCCLUSION LOGIC ────────────────────────
+    function updateNodeScreenPositions() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      const camPosDir = camera.position.clone().normalize();
+
+      NODES.forEach(node => {
+        if (!node.mesh || !node.el) return;
+
+        const worldPos = new THREE.Vector3();
+        node.mesh.getWorldPosition(worldPos);
+
+        const vec = worldPos.clone().project(camera);
+
+        const nodeDir = worldPos.clone().normalize();
+        const facing = camPosDir.dot(nodeDir); // >0 = facing camera side
+
+        // Occlusion Check: is the node facing away relative to globe center?
+        const behindGlobe = facing < 0.15;
+        node.el.style.opacity = behindGlobe ? '0.12' : '1';
+        node.el.style.pointerEvents = behindGlobe ? 'none' : 'auto';
+        node.el.style.filter = behindGlobe ? 'grayscale(1) blur(1px)' : 'none';
+
+        const x = (vec.x * 0.5 + 0.5) * width;
+        const y = (-vec.y * 0.5 + 0.5) * height;
+
+        node.el.style.left = `${x}px`;
+        node.el.style.top = `${y}px`;
+
+        const scale = 1.3 - vec.z * 0.5;
+        node.el.style.transform = `translate(-50%, -50%) scale(${Math.max(0.6, Math.min(1.3, scale)).toFixed(2)})`;
+      });
+    }
+
+    // ── ENTRY ZOOM ANIMATION ──────────────────────────────
+    function handleEntryAnimation() {
+      const transitionInNode = sessionStorage.getItem('nexus-transition-in');
+      if (!transitionInNode) return;
+      sessionStorage.removeItem('nexus-transition-in');
+
+      flash.style.opacity = 1;
+      const labels = document.querySelectorAll('.cyber-node-label');
+      labels.forEach(l => l.style.opacity = 0);
+
+      camera.position.set(0, 0, 0.4);
+
+      const tl = gsap.timeline();
+      tl.to(flash, {
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.out'
+      })
+      .to(camera.position, {
+        x: 0,
+        y: 0,
+        z: 5,
+        duration: 0.8,
+        ease: 'power2.out'
+      }, '<')
+      .to(labels, {
+        opacity: 1,
+        duration: 0.4
+      });
+    }
+
+    handleEntryAnimation();
+
+    // ── PERFORMANCE SAMPLER FALLBACK ──────────────────────
+    function detectPerformanceTier() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        applyTier('low');
+        return;
+      }
+
+      const start = performance.now();
+      let frames = 0;
+
+      function sample(now) {
+        frames++;
+        if (now - start < 1200) {
+          requestAnimationFrame(sample);
+        } else {
+          const fps = frames / 1.2;
+          if (fps < 40) applyTier('low');
+        }
+      }
+      requestAnimationFrame(sample);
+    }
+
+    function applyTier(tier) {
+      if (tier === 'low') {
+        document.body.classList.add('reduced-3d');
+        outerGeo.dispose();
+        innerGeo.dispose();
+        // Lower mesh density
+        outerMesh.geometry = new THREE.IcosahedronGeometry(1.8, 0);
+        innerMesh.geometry = new THREE.IcosahedronGeometry(1.0, 0);
+      }
+    }
+
+    detectPerformanceTier();
+
     // Animation variables
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
     let scrollSpeed = 0;
     let targetScrollSpeed = 0;
 
-    // Track mouse move for parallax
+    // Parallax mouse movements
     window.addEventListener('mousemove', (e) => {
       mouseX = (e.clientX / window.innerWidth - 0.5) * 0.3;
       mouseY = (e.clientY / window.innerHeight - 0.5) * 0.3;
     });
 
-    // Track scroll
+    // Scroll rotation speed transfer
     let lastScrollY = window.scrollY;
     window.addEventListener('scroll', () => {
       const currentScroll = window.scrollY;
@@ -625,23 +896,27 @@ document.addEventListener('click', function(e) {
     function tick() {
       const delta = clock.getDelta();
 
-      // Decay scroll speed impact
       scrollSpeed += (targetScrollSpeed - scrollSpeed) * 0.05;
       targetScrollSpeed *= 0.95;
 
-      // Base rotation + scroll velocity boost
-      outerMesh.rotation.y += (0.05 + scrollSpeed) * delta;
-      outerMesh.rotation.x += 0.02 * delta;
+      // Base rotations
+      outerMesh.rotation.y += (0.04 + scrollSpeed) * delta;
+      outerMesh.rotation.x += 0.015 * delta;
 
-      innerMesh.rotation.y -= (0.03 + scrollSpeed * 0.5) * delta;
+      innerMesh.rotation.y -= (0.02 + scrollSpeed * 0.5) * delta;
       innerMesh.rotation.x -= 0.01 * delta;
 
-      // Smooth mouse parallax
+      // Slowly rotate the entire orbit group
+      nodesGroup.rotation.y += (0.03 + scrollSpeed * 0.2) * delta;
+
       targetX += (mouseX - targetX) * 0.05;
       targetY += (mouseY - targetY) * 0.05;
 
       scene.rotation.y = targetX;
       scene.rotation.x = targetY;
+
+      // Project positions & check occlusion
+      updateNodeScreenPositions();
 
       renderer.render(scene, camera);
       requestAnimationFrame(tick);
@@ -650,11 +925,117 @@ document.addEventListener('click', function(e) {
     tick();
   }
 
-  // Load Three.js dynamically if not already present
+  // ── COMMAND PALETTE ESCAPE HATCH ────────────────────────
+  function initCommandPalette() {
+    const overlay = document.createElement('div');
+    overlay.id = 'nexus-cmd-overlay';
+    document.body.appendChild(overlay);
+
+    const palette = document.createElement('div');
+    palette.id = 'nexus-cmd-palette';
+    palette.innerHTML = `
+      <input type="text" id="nexus-cmd-input" placeholder="SEARCH SYSTEM NODES... (ESC to close)" autocomplete="off">
+      <ul id="nexus-cmd-results"></ul>
+    `;
+    document.body.appendChild(palette);
+
+    const input = document.getElementById('nexus-cmd-input');
+    const results = document.getElementById('nexus-cmd-results');
+
+    function filterResults() {
+      const query = input.value.toLowerCase();
+      const matches = NODES.filter(n => n.label.toLowerCase().replace('_', ' ').includes(query));
+
+      results.innerHTML = matches.map((n, idx) => `
+        <li class="nexus-cmd-item ${idx === 0 ? 'active' : ''}" data-href="${n.href}">
+          <span>${n.label.replace('_', ' ')}</span>
+          <span class="nexus-cmd-shortcut">Enter</span>
+        </li>
+      `).join('');
+
+      document.querySelectorAll('.nexus-cmd-item').forEach(item => {
+        item.onclick = () => {
+          window.location.href = item.dataset.href;
+        };
+      });
+    }
+
+    function openPalette() {
+      overlay.classList.add('open');
+      palette.classList.add('open');
+      input.value = '';
+      filterResults();
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closePalette() {
+      overlay.classList.remove('open');
+      palette.classList.remove('open');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        openPalette();
+      }
+      if (e.key === 'Escape') {
+        closePalette();
+      }
+    });
+
+    overlay.onclick = closePalette;
+    input.oninput = filterResults;
+
+    input.addEventListener('keydown', (e) => {
+      const items = document.querySelectorAll('.nexus-cmd-item');
+      let activeIdx = Array.from(items).findIndex(item => item.classList.contains('active'));
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (activeIdx < items.length - 1) {
+          items[activeIdx].classList.remove('active');
+          items[activeIdx + 1].classList.add('active');
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (activeIdx > 0) {
+          items[activeIdx].classList.remove('active');
+          items[activeIdx - 1].classList.add('active');
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIdx >= 0) {
+          window.location.href = items[activeIdx].dataset.href;
+        }
+      }
+    });
+  }
+
+  // Load Three.js & GSAP dynamically if not already present
+  let libsLoaded = 0;
+  function onLibLoaded() {
+    libsLoaded++;
+    if (libsLoaded === 2) {
+      start3D();
+      initCommandPalette();
+    }
+  }
+
   if (typeof THREE === 'undefined') {
-    loadScript(THREE_CDN, start3D);
+    loadScript(THREE_CDN, onLibLoaded);
   } else {
+    libsLoaded++;
+  }
+
+  if (typeof gsap === 'undefined') {
+    loadScript(GSAP_CDN, onLibLoaded);
+  } else {
+    libsLoaded++;
+  }
+
+  if (libsLoaded === 2) {
     start3D();
+    initCommandPalette();
   }
 })();
 
