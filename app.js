@@ -950,17 +950,61 @@ document.addEventListener('click', function(e) {
 
     detectPerformanceTier();
 
-    // Animation variables
-    let mouseX = 0, mouseY = 0;
-    let targetX = 0, targetY = 0;
+    // Auto-open 3D Navigator on first open of the index page
+    const isIndexPage = location.pathname.endsWith('index.html') || 
+                        location.pathname.endsWith('/') || 
+                        location.pathname === '' || 
+                        !location.pathname.includes('.html');
+                         
+    if (isIndexPage && !sessionStorage.getItem('nexus-transition-in')) {
+      togglePortalMode(true);
+    }
+
+    // ── DRAG-TO-SPIN CONTROL SYSTEM ──────────────────────────
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let dragVelocityX = 0;
+    let dragVelocityY = 0;
     let scrollSpeed = 0;
     let targetScrollSpeed = 0;
 
-    // Parallax mouse movements
-    window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 0.3;
-      mouseY = (e.clientY / window.innerHeight - 0.5) * 0.3;
-    });
+    const dragContainer = overlay; // absolute overlays cover click areas
+
+    function onPointerDown(e) {
+      if (e.target.closest('.node-btn')) return;
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      previousMousePosition = { x: clientX, y: clientY };
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const deltaX = clientX - previousMousePosition.x;
+      const deltaY = clientY - previousMousePosition.y;
+
+      // Update rotational velocity based on delta drag coordinates
+      dragVelocityY = deltaX * 0.005;
+      dragVelocityX = deltaY * 0.005;
+
+      previousMousePosition = { x: clientX, y: clientY };
+    }
+
+    function onPointerUp() {
+      isDragging = false;
+    }
+
+    // Drag-to-spin Event Listeners
+    dragContainer.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+
+    dragContainer.addEventListener('touchstart', onPointerDown, { passive: true });
+    window.addEventListener('touchmove', onPointerMove, { passive: true });
+    window.addEventListener('touchend', onPointerUp);
 
     // Scroll rotation speed transfer
     let lastScrollY = window.scrollY;
@@ -986,21 +1030,25 @@ document.addEventListener('click', function(e) {
       scrollSpeed += (targetScrollSpeed - scrollSpeed) * 0.05;
       targetScrollSpeed *= 0.95;
 
-      // Base rotations
-      outerMesh.rotation.y += (0.04 + scrollSpeed) * delta;
-      outerMesh.rotation.x += 0.015 * delta;
+      // Friction decay for drag velocity
+      if (!isDragging) {
+        dragVelocityY *= 0.95;
+        dragVelocityX *= 0.95;
+      }
 
+      // Base lazy auto-spin velocity
+      const autoSpinY = 0.05 * delta;
+
+      // Apply drag coordinates + base spin to meshes
+      outerMesh.rotation.y += dragVelocityY + autoSpinY;
+      outerMesh.rotation.x += dragVelocityX;
+
+      nodesGroup.rotation.y += dragVelocityY + autoSpinY;
+      nodesGroup.rotation.x += dragVelocityX;
+
+      // Inner core counter-spins
       innerMesh.rotation.y -= (0.02 + scrollSpeed * 0.5) * delta;
-      innerMesh.rotation.x -= 0.01 * delta;
-
-      // Slowly rotate the entire orbit group
-      nodesGroup.rotation.y += (0.03 + scrollSpeed * 0.2) * delta;
-
-      targetX += (mouseX - targetX) * 0.05;
-      targetY += (mouseY - targetY) * 0.05;
-
-      scene.rotation.y = targetX;
-      scene.rotation.x = targetY;
+      innerMesh.rotation.x -= 0.008 * delta;
 
       // Project positions & check occlusion
       updateNodeScreenPositions();
