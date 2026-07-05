@@ -30,8 +30,8 @@
   </div>
 
   <div class="animate-in delay-1" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
-    <input type="text" id="search" oninput="render()" placeholder="Search commands, descriptions..." style="flex:1;min-width:200px;">
-    <select id="filter-cat" onchange="render()" style="font-size:13px;padding:7px 10px;">
+    <input type="text" id="search" oninput="debouncedRender()" placeholder="Search commands, descriptions..." style="flex:1;min-width:200px;">
+    <select id="filter-cat" onchange="debouncedRender()" style="font-size:13px;padding:7px 10px;">
       <option value="">All categories</option>
     </select>
     <span style="font-size:12px;color:var(--text3);" id="cmd-count"></span>
@@ -83,6 +83,8 @@
 
 <script src="app.js"></script>
 <script>
+const debounced = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
 const BUILTINS = [
   { cmd: 'chmod 755 file', cat: 'Linux', desc: 'Set file permissions: owner=rwx, group=rx, others=rx', notes: '4=read, 2=write, 1=execute', tags: ['permissions','files'] },
   { cmd: 'chown user:group file', cat: 'Linux', desc: 'Change file owner and group', notes: '', tags: ['permissions'] },
@@ -171,6 +173,8 @@ function deleteCmd(id) {
 function copyCmd(cmd) {
   navigator.clipboard.writeText(cmd).then(() => toast('Copied!', 'success'));
 }
+
+const debouncedRender = debounced(render, 150);
 
 function updateCatFilter() {
   const cmds = getCmds();

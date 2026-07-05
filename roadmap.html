@@ -131,8 +131,7 @@ function render() {
           ${p.topics.map(t => {
             const isDone = doneTops.includes(t);
             const safe = escHtml(t);
-            const jsonSafe = escHtml(JSON.stringify(t));
-            return `<div onclick="toggleTopic('${p.id}', ${jsonSafe})"
+            return `<div data-phase-id="${escHtml(p.id)}" data-topic="${safe}" onclick="toggleTopic(this.dataset.phaseId, this.dataset.topic)"
               style="font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid ${isDone ? '#1a5c3a' : 'var(--border)'};
               background:${isDone ? 'var(--green-bg)' : 'var(--bg3)'};color:${isDone ? 'var(--green)' : 'var(--text2)'};
               cursor:pointer;transition:all .15s;user-select:none;">

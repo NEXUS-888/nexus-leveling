@@ -58,10 +58,44 @@ function initFirebase() {
       // Pull data once on login
       db.ref(`users/${user.uid}`).once('value').then(snapshot => {
         const cloudData = snapshot.val();
+        let changed = false;
         if (cloudData) {
           for (const key in cloudData) {
-            localStorage.setItem(key, JSON.stringify(cloudData[key]));
+            if (key.endsWith('_updatedAt')) continue;
+            if (key === '_nexus_pending') continue;
+            const localRaw = localStorage.getItem(key);
+            if (localRaw) {
+              try {
+                const local = JSON.parse(localRaw);
+                const cloudVal = cloudData[key];
+                let localTs = 0, cloudTs = 0;
+                if (Array.isArray(local)) {
+                  localTs = JSON.parse(localStorage.getItem(key + '_updatedAt') || '0');
+                  cloudTs = cloudData[key + '_updatedAt'] || 0;
+                } else {
+                  localTs = local._updatedAt || 0;
+                  cloudTs = cloudVal._updatedAt || 0;
+                }
+                if (cloudTs > localTs) {
+                  localStorage.setItem(key, JSON.stringify(cloudVal));
+                  if (Array.isArray(cloudVal) && cloudData[key + '_updatedAt']) {
+                    localStorage.setItem(key + '_updatedAt', JSON.stringify(cloudData[key + '_updatedAt']));
+                  }
+                  changed = true;
+                }
+              } catch {
+                changed = true;
+              }
+            } else {
+              localStorage.setItem(key, JSON.stringify(cloudData[key]));
+              if (cloudData[key + '_updatedAt']) {
+                localStorage.setItem(key + '_updatedAt', JSON.stringify(cloudData[key + '_updatedAt']));
+              }
+              changed = true;
+            }
           }
+        }
+        if (changed) {
           if (typeof render === 'function') render();
           if (typeof renderCustomList === 'function') renderCustomList();
           if (typeof loadLog === 'function') loadLog();
@@ -93,6 +127,9 @@ function initFirebase() {
     };
     s.onerror = (err) => {
       console.error("NEXUS: Firebase SDK failed to load: " + scripts[index], err);
+      if (index === 0) {
+        document.getElementById('fb-sync-status').textContent = '🔴 Firebase unavailable (offline?)';
+      }
       updateSyncUI();
     };
     document.head.appendChild(s);
@@ -104,14 +141,36 @@ function initFirebase() {
 const S = {
   get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set: (k, v) => {
-    localStorage.setItem(k, JSON.stringify(v));
-    if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).set(v).catch(console.error);
-    window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key: k, val: v } }));
+    const now = Date.now();
+    let val = v;
+    if (typeof v === 'object' && v !== null) {
+      if (Array.isArray(v)) {
+        localStorage.setItem(k + '_updatedAt', JSON.stringify(now));
+        val = v;
+      } else {
+        val = { ...v, _updatedAt: now };
+      }
+    }
+    localStorage.setItem(k, JSON.stringify(val));
+    if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).set(val).catch(console.error);
+    if (Array.isArray(v) && currentUser && db) {
+      db.ref(`users/${currentUser.uid}/${k}_updatedAt`).set(now).catch(console.error);
+    }
+    window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key: k, val } }));
   },
   del: k => {
     localStorage.removeItem(k);
-    if (currentUser && db) db.ref(`users/${currentUser.uid}/${k}`).remove().catch(console.error);
-    window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key: k } }));
+    localStorage.removeItem(k + '_updatedAt');
+    window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key: k, val: null } }));
+    if (currentUser && db) {
+      db.ref(`users/${currentUser.uid}/${k}`).remove().catch(err => {
+        console.error("NEXUS: Firebase delete failed, queuing for retry:", err);
+        const queue = JSON.parse(localStorage.getItem('_nexus_pending') || '[]');
+        queue.push({ type: 'del', key: k, ts: Date.now() });
+        localStorage.setItem('_nexus_pending', JSON.stringify(queue));
+      });
+      db.ref(`users/${currentUser.uid}/${k}_updatedAt`).remove().catch(() => {});
+    }
   }
 };
 
@@ -338,10 +397,11 @@ function calcStreak(entries) {
   if (!days.length) return 0;
 
   // Verify that the most recent entry was logged today or yesterday
-  const today = new Date(todayStr());
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const mostRecent = new Date(days[0]);
   const diffFromToday = (today - mostRecent) / (1000 * 60 * 60 * 24);
-  if (diffFromToday > 1.5) return 0; // Streak is broken
+  if (diffFromToday > 1) return 0; // Streak is broken
 
   let streak = 1;
   for (let i = 0; i < days.length - 1; i++) {
@@ -375,6 +435,14 @@ function getRoadmapProgress() {
     completed += (done[p.id] || []).length;
   });
   return { total, completed, pct: total ? Math.round(completed / total * 100) : 0 };
+}
+
+function getFlashcardMastery() {
+  const scores = S.get(KEYS.cards) || {};
+  const vals = Object.values(scores);
+  if (!vals.length) return 0;
+  const know = vals.filter(v => v === 'know').length;
+  return Math.round(know / vals.length * 100);
 }
 
 function setActiveNav() {
@@ -417,7 +485,15 @@ function importAllData(jsonStr) {
   try {
     const data = JSON.parse(jsonStr);
     Object.entries(data).forEach(([key, val]) => {
-      localStorage.setItem(key, JSON.stringify(val));
+      const existing = localStorage.getItem(key);
+      const serialized = JSON.stringify(val);
+      if (existing !== serialized) {
+        localStorage.setItem(key, serialized);
+        if (currentUser && db) {
+          db.ref(`users/${currentUser.uid}/${key}`).set(val).catch(console.error);
+        }
+        window.dispatchEvent(new CustomEvent('nexus-state-change', { detail: { key, val } }));
+      }
     });
     return true;
   } catch (e) {
@@ -567,15 +643,6 @@ function animateCounter(el, target, duration) {
   requestAnimationFrame(update);
 }
 
-// ── BUTTON RIPPLE EFFECT ──────────────────────────────────
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('.btn');
-  if (!btn) return;
-  const rect = btn.getBoundingClientRect();
-  btn.style.setProperty('--ripple-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
-  btn.style.setProperty('--ripple-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
-});
-
 // ── 3D WEBGL ENGINE INJECTION ─────────────────────────────
 (function initGlobal3DBg() {
   console.log("NEXUS 3D: Initializing background engine...");
@@ -615,13 +682,6 @@ document.addEventListener('click', function(e) {
   function getRoadmapPct() {
     const progress = getRoadmapProgress();
     return progress.pct;
-  }
-  function getFlashcardMastery() {
-    const scores = S.get(KEYS.cards) || {};
-    const vals = Object.values(scores);
-    if (!vals.length) return 0;
-    const know = vals.filter(v => v === 'know').length;
-    return Math.round(know / vals.length * 100);
   }
   function getJobAppCount() {
     const apps = S.get(KEYS.apps) || [];
@@ -836,38 +896,35 @@ document.addEventListener('click', function(e) {
     });
 
     // ── PROJECTION & OCCLUSION LOGIC ────────────────────────
+    const _worldPos = new THREE.Vector3();
+    const _vec = new THREE.Vector3();
+    const _nodeDir = new THREE.Vector3();
+    const _camPosDir = new THREE.Vector3();
+
     function updateNodeScreenPositions() {
       if (!portalActive) return;
       const width = window.innerWidth;
       const height = window.innerHeight;
 
-      const camPosDir = camera.position.clone().normalize();
+      camera.getWorldPosition(_camPosDir).normalize();
 
       NODES.forEach(node => {
         if (!node.mesh || !node.el) return;
 
-        const worldPos = new THREE.Vector3();
-        node.mesh.getWorldPosition(worldPos);
+        node.mesh.getWorldPosition(_worldPos);
+        _vec.copy(_worldPos).project(camera);
+        _nodeDir.copy(_worldPos).normalize();
 
-        const vec = worldPos.clone().project(camera);
+        const facing = _camPosDir.dot(_nodeDir);
 
-        const nodeDir = worldPos.clone().normalize();
-        const facing = camPosDir.dot(nodeDir); // >0 = facing camera side
-
-        // Occlusion Check: is the node facing away relative to globe center?
         const behindGlobe = facing < 0.15;
-        node.el.style.opacity = behindGlobe ? '0.12' : '1';
-        node.el.style.pointerEvents = behindGlobe ? 'none' : 'auto';
-        node.el.style.filter = behindGlobe ? 'grayscale(1) blur(1px)' : 'none';
+        node.el.classList.toggle('occluded', behindGlobe);
 
-        const x = (vec.x * 0.5 + 0.5) * width;
-        const y = (-vec.y * 0.5 + 0.5) * height;
+        const x = (_vec.x * 0.5 + 0.5) * width;
+        const y = (-_vec.y * 0.5 + 0.5) * height;
 
-        node.el.style.left = `${x}px`;
-        node.el.style.top = `${y}px`;
-
-        const scale = 1.3 - vec.z * 0.5;
-        node.el.style.transform = `translate(-50%, -50%) scale(${Math.max(0.6, Math.min(1.3, scale)).toFixed(2)})`;
+        const scale = Math.max(0.6, Math.min(1.3, 1.3 - _vec.z * 0.5));
+        node.el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(${scale})`;
       });
     }
 
@@ -1074,28 +1131,40 @@ document.addEventListener('click', function(e) {
 
     dragContainer.addEventListener('touchstart', onPointerDown, { passive: true });
     window.addEventListener('touchmove', onPointerMove, { passive: true });
-    window.addEventListener('touchend', onPointerUp);
+    window.addEventListener('touchend', onPointerUp, { passive: true });
 
-    // Scroll rotation speed transfer
+    // Scroll rotation speed transfer (coalesced via rAF)
     let lastScrollY = window.scrollY;
+    let scrollPending = false;
     window.addEventListener('scroll', () => {
       const currentScroll = window.scrollY;
       targetScrollSpeed = Math.abs(currentScroll - lastScrollY) * 0.015;
       lastScrollY = currentScroll;
-    });
+      if (!scrollPending) {
+        scrollPending = true;
+        requestAnimationFrame(() => { scrollPending = false; });
+      }
+    }, { passive: true });
 
-    // Handle Resize
+    // Handle Resize (coalesced via rAF)
+    let resizePending = false;
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      if (resizePending) return;
+      resizePending = true;
+      requestAnimationFrame(() => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        resizePending = false;
+      });
     });
 
     // Render loop
     const clock = new THREE.Clock();
     function tick() {
-      const delta = clock.getDelta();
+      const rawDelta = clock.getDelta();
+      const delta = Math.min(rawDelta, 0.1);
 
       scrollSpeed += (targetScrollSpeed - scrollSpeed) * 0.05;
       targetScrollSpeed *= 0.95;

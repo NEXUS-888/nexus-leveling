@@ -181,7 +181,7 @@ nav a {
   display: flex;
   align-items: center;
   border-bottom: 2px solid transparent;
-  transition: all .2s var(--transition);
+  transition: color .2s var(--transition), border-bottom-color .2s var(--transition);
   text-decoration: none;
 }
 
@@ -271,7 +271,7 @@ nav a.active {
   padding: 1rem 1.15rem;
   position: relative;
   overflow: hidden;
-  transition: all .3s var(--transition);
+  transition: border-color .3s var(--transition), transform .3s var(--transition);
 }
 
 /* Left accent bar */
@@ -511,7 +511,7 @@ select option { background: var(--bg2); }
   border-radius: var(--radius);
   padding: 1rem 1.25rem;
   margin-bottom: 8px;
-  transition: all .25s var(--transition);
+  transition: border-color .25s var(--transition), transform .25s var(--transition);
 }
 .entry-card:hover {
   border-color: var(--border2);
@@ -639,7 +639,7 @@ select option { background: var(--bg2); }
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  transition: all .25s var(--transition);
+  transition: border-color .25s var(--transition), transform .25s var(--transition);
   margin-bottom: 8px;
 }
 .resource-card:hover {
@@ -720,7 +720,7 @@ select option { background: var(--bg2); }
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
   margin-bottom: 10px;
-  transition: all .25s var(--transition);
+  transition: border-color .25s var(--transition), transform .25s var(--transition);
 }
 .project-card:hover { border-color: var(--border2); transform: translateY(-1px); }
 .project-status {
@@ -855,14 +855,22 @@ body.portal-open #nexus-nodes-overlay {
 
 .cyber-node-label {
   position: absolute;
+  left: 0;
+  top: 0;
   pointer-events: auto;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translate(-50%, -50%);
-  transition: opacity 0.3s var(--transition), filter 0.3s;
+  will-change: transform;
   filter: drop-shadow(0 0 4px var(--cyan-glow));
+  transition: filter 0.3s;
+}
+.cyber-node-label.occluded {
+  opacity: 0.12;
+  filter: grayscale(1) blur(1px) drop-shadow(0 0 4px var(--cyan-glow));
+  pointer-events: none;
+  transition: opacity 0.3s, filter 0.3s;
 }
 
 .node-btn {
@@ -874,7 +882,7 @@ body.portal-open #nexus-nodes-overlay {
   font-size: 10px;
   letter-spacing: 0.08em;
   color: var(--text);
-  transition: all 0.3s var(--transition);
+  transition: border-color 0.3s var(--transition), color 0.3s var(--transition), box-shadow 0.3s var(--transition);
   display: flex;
   align-items: center;
   gap: 6px;

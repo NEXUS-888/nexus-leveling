@@ -86,7 +86,7 @@
 
   <!-- FILTER -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-    <select id="filter-status" onchange="render()" style="font-size:13px;padding:7px 10px;">
+    <select id="filter-status" onchange="debouncedRender()" style="font-size:13px;padding:7px 10px;">
       <option value="">All statuses</option>
       <option value="applied">Applied</option>
       <option value="oa">Online Assessment</option>
@@ -94,12 +94,12 @@
       <option value="offer">Offer</option>
       <option value="rejected">Rejected</option>
     </select>
-    <select id="filter-type" onchange="render()" style="font-size:13px;padding:7px 10px;">
+    <select id="filter-type" onchange="debouncedRender()" style="font-size:13px;padding:7px 10px;">
       <option value="">All types</option>
       <option>Internship</option>
       <option>Full-time</option>
     </select>
-    <input type="text" id="search" oninput="render()" placeholder="Search company..." style="font-size:13px;padding:7px 10px;width:200px;">
+    <input type="text" id="search" oninput="debouncedRender()" placeholder="Search company..." style="font-size:13px;padding:7px 10px;width:200px;">
     <span id="followup-count" style="font-size:12px;color:var(--amber);margin-left:auto;"></span>
   </div>
 
@@ -108,6 +108,9 @@
 
 <script src="app.js"></script>
 <script>
+const debounced = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const debouncedRender = debounced(render, 150);
+
 const TARGETS = [
   { name: 'Razorpay', type: 'fintech' },
   { name: 'CRED', type: 'fintech' },

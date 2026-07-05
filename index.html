@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NEXUS leveling — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -27,7 +29,7 @@
 </nav>
 
 <div class="page">
-  <div id="why-banner" class="animate-in" style="display:none; background:rgba(13,31,66,0.4); border:1px solid rgba(26,58,122,0.4); border-radius:var(--radius); padding:12px 16px; margin-bottom:1.5rem; font-size:13px; color:var(--text2); backdrop-filter:blur(12px);">
+  <div id="why-banner" class="animate-in" style="display:none; background:rgba(13,31,66,0.7); border:1px solid rgba(26,58,122,0.4); border-radius:var(--radius); padding:12px 16px; margin-bottom:1.5rem; font-size:13px; color:var(--text2);">
     <span style="color:var(--text3); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Why you're doing this</span><br>
     <span id="why-text" style="color:var(--text); font-weight:500;"></span>
   </div>
@@ -115,6 +117,7 @@ function renderWhy() {
   if (why) document.getElementById('why-text').textContent = why;
 }
 
+let _statsSnapshot = '';
 function renderStats() {
   const entries = S.get(KEYS.entries) || [];
   const streak = calcStreak(entries);
@@ -124,6 +127,9 @@ function renderStats() {
   const pct = total ? Math.round(built / total * 100) : 0;
   const prog = getRoadmapProgress();
   const apps = S.get(KEYS.apps) || [];
+  const snapshot = `${streak}|${longest}|${built}|${total}|${pct}|${prog.pct}|${prog.completed}|${prog.total}|${apps.length}|${getFlashScore()}`;
+  if (snapshot === _statsSnapshot) return;
+  _statsSnapshot = snapshot;
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-card"><div class="stat-label">Current streak</div><div class="stat-val" style="color:var(--amber);">${streak}d</div><div class="stat-sub">Best: ${longest}d</div></div>
     <div class="stat-card"><div class="stat-label">Days logged</div><div class="stat-val">${total}</div><div class="stat-sub">Keep going</div></div>
@@ -135,19 +141,19 @@ function renderStats() {
 }
 
 function getFlashScore() {
-  const scores = S.get(KEYS.cards) || {};
-  const vals = Object.values(scores);
-  if (!vals.length) return 0;
-  const know = vals.filter(v => v === 'know').length;
-  return Math.round(know / vals.length * 100);
+  return getFlashcardMastery();
 }
 
+let _heatmapData = '';
 function renderHeatmap() {
   const entries = S.get(KEYS.entries) || [];
   const byDate = {};
   entries.forEach(e => {
     byDate[e.date] = (byDate[e.date] || 0) + (e.built ? 2 : 1);
   });
+  const snapshot = JSON.stringify(byDate);
+  if (snapshot === _heatmapData) return;
+  _heatmapData = snapshot;
   const cells = [];
   const today = new Date();
   for (let i = 89; i >= 0; i--) {
@@ -185,8 +191,12 @@ function renderRatioChart() {
     `<span style="color:var(--green);">■</span> Built: ${built} &nbsp; <span style="color:var(--text3);">■</span> Watch-only: ${watched}`;
 }
 
+let _phaseSnapshot = '';
 function renderPhaseProgress() {
   const done = S.get(KEYS.roadmap) || {};
+  const snapshot = JSON.stringify(done);
+  if (snapshot === _phaseSnapshot) return;
+  _phaseSnapshot = snapshot;
   const html = ROADMAP.map(p => {
     const count = (done[p.id] || []).length;
     const total = p.topics.length;
@@ -206,6 +216,7 @@ function renderPhaseProgress() {
   document.getElementById('phase-progress').innerHTML = html;
 }
 
+let _weeklySnapshot = '';
 function renderWeeklyChart() {
   const entries = S.get(KEYS.entries) || [];
   const weeks = {};
@@ -216,6 +227,9 @@ function renderWeeklyChart() {
     const key = weekStart.toISOString().split('T')[0];
     weeks[key] = (weeks[key] || 0) + 1;
   });
+  const snapshot = JSON.stringify(weeks);
+  if (snapshot === _weeklySnapshot) return;
+  _weeklySnapshot = snapshot;
   const labels = Object.keys(weeks).sort().slice(-8).map(k => {
     const d = new Date(k);
     return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });

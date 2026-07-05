@@ -318,7 +318,7 @@ function renderCustomList() {
             <span class="badge badge-purple">${c.topic}</span>
             <span class="badge badge-gray">Custom</span>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="removeCustomFC('${c.id}')">Delete</button>
+          <button class="btn btn-danger btn-sm" data-card-id="${c.id}" onclick="removeCustomFC(this.dataset.cardId)">Delete</button>
         </div>
         <div class="entry-topic">${c.q}</div>
         <div class="entry-body">${c.a}</div>

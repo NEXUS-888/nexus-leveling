@@ -78,7 +78,7 @@
 
   <!-- FILTER -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
-    <select id="filter-status" onchange="render()" style="font-size:13px;padding:7px 10px;">
+    <select id="filter-status" onchange="debouncedRender()" style="font-size:13px;padding:7px 10px;">
       <option value="">All statuses</option>
       <option value="planning">📋 Planning</option>
       <option value="in-progress">🔨 In Progress</option>
@@ -93,6 +93,9 @@
 
 <script src="app.js"></script>
 <script>
+const debounced = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const debouncedRender = debounced(render, 150);
+
 const STATUS_META = {
   'planning':    { label: '📋 Planning',    cls: 'badge-gray',   color: 'var(--text2)' },
   'in-progress': { label: '🔨 In Progress', cls: 'badge-amber',  color: 'var(--amber)' },
