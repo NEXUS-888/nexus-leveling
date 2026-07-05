@@ -1,3 +1,20 @@
+// ── GLOBAL ERROR BOUNDARY FOR DEBUGGING ───────────────────
+window.addEventListener('error', function(e) {
+  const errDiv = document.createElement('div');
+  errDiv.style.position = 'fixed';
+  errDiv.style.top = '10px';
+  errDiv.style.left = '10px';
+  errDiv.style.right = '10px';
+  errDiv.style.background = '#ff3b5c';
+  errDiv.style.color = '#fff';
+  errDiv.style.padding = '15px';
+  errDiv.style.zIndex = '99999';
+  errDiv.style.fontFamily = 'monospace';
+  errDiv.style.whiteSpace = 'pre-wrap';
+  errDiv.innerHTML = `<strong>CRITICAL RUNTIME ERROR:</strong><br>${e.message}<br>at ${e.filename}:${e.lineno}:${e.colno}`;
+  document.body.appendChild(errDiv);
+});
+
 // ── FIREBASE CLOUD SYNC ────────────────────────────────────
 let currentUser = null;
 let db = null;
