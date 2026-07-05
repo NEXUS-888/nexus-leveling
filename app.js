@@ -1011,6 +1011,8 @@ function animateCounter(el, target, duration) {
 
       if (portalActive) {
         body.classList.add('portal-open');
+        const labels = document.querySelectorAll('.cyber-node-label');
+        labels.forEach(l => l.style.opacity = 1);
         if (toggle) {
           toggle.innerHTML = '✕ CLOSE HUD';
           toggle.style.borderColor = 'var(--magenta)';
@@ -1023,6 +1025,8 @@ function animateCounter(el, target, duration) {
         });
       } else {
         body.classList.remove('portal-open');
+        const labels = document.querySelectorAll('.cyber-node-label');
+        labels.forEach(l => l.style.opacity = 0);
         if (toggle) {
           toggle.innerHTML = '🌐 3D NAVIGATION';
           toggle.style.borderColor = '';
