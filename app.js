@@ -532,6 +532,7 @@ document.addEventListener('click', function(e) {
 
 // ── 3D WEBGL ENGINE INJECTION ─────────────────────────────
 (function initGlobal3DBg() {
+  console.log("NEXUS 3D: Initializing background engine...");
   const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   const GSAP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
 
@@ -579,11 +580,11 @@ document.addEventListener('click', function(e) {
     const s = document.createElement('script');
     s.src = src;
     s.onload = cb;
+    s.onerror = (err) => console.error("NEXUS 3D: Script load failed: " + src, err);
     document.head.appendChild(s);
   }
 
   function start3D() {
-    // Create background canvas
     const canvas = document.createElement('canvas');
     canvas.id = 'nexus-3d-bg';
     document.body.insertBefore(canvas, document.body.firstChild);
@@ -923,6 +924,10 @@ document.addEventListener('click', function(e) {
     }
 
     tick();
+    } catch (err) {
+      console.error("NEXUS 3D: Scenic engine failed to load:", err);
+      document.body.classList.add('reduced-3d');
+    }
   }
 
   // ── COMMAND PALETTE ESCAPE HATCH ────────────────────────
