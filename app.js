@@ -561,6 +561,31 @@ document.addEventListener('click', function(e) {
 // ── 3D WEBGL ENGINE INJECTION ─────────────────────────────
 (function initGlobal3DBg() {
   console.log("NEXUS 3D: Initializing background engine...");
+  
+  // Inject canvas and overlays synchronously on load (prevents layout popping during async script loading)
+  const canvas = document.createElement('canvas');
+  canvas.id = 'nexus-3d-bg';
+  document.body.insertBefore(canvas, document.body.firstChild);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'nexus-nodes-overlay';
+  document.body.appendChild(overlay);
+
+  const flash = document.createElement('div');
+  flash.id = 'nexus-transition-overlay';
+  document.body.appendChild(flash);
+
+  // Synchronously hide page content immediately if transitioning or landing to prevent pops
+  const transitionInNode = sessionStorage.getItem('nexus-transition-in');
+  const isIndexPage = location.pathname.endsWith('index.html') || 
+                      location.pathname.endsWith('/') || 
+                      location.pathname === '' || 
+                      !location.pathname.includes('.html');
+
+  if (transitionInNode || isIndexPage) {
+    document.body.classList.add('portal-open');
+  }
+
   const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   const GSAP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
 
@@ -613,37 +638,25 @@ document.addEventListener('click', function(e) {
   }
 
   function start3D() {
+    console.log("NEXUS 3D: Starting 3D scene build...");
     try {
-      const canvas = document.createElement('canvas');
-    canvas.id = 'nexus-3d-bg';
-    document.body.insertBefore(canvas, document.body.firstChild);
+      // SR-only screen-reader static navigation fallback
+      const staticNav = document.createElement('nav');
+      staticNav.className = 'sr-only';
+      staticNav.id = 'nexus-static-nav';
+      staticNav.innerHTML = NODES.map(n => `<a href="${n.href}">${n.label.replace('_', ' ')}</a>`).join('');
+      document.body.appendChild(staticNav);
 
-    // Create HUD overlays
-    const overlay = document.createElement('div');
-    overlay.id = 'nexus-nodes-overlay';
-    document.body.appendChild(overlay);
+      // Three.js Core Setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.z = 5;
 
-    const flash = document.createElement('div');
-    flash.id = 'nexus-transition-overlay';
-    document.body.appendChild(flash);
-
-    // SR-only screen-reader static navigation fallback
-    const staticNav = document.createElement('nav');
-    staticNav.className = 'sr-only';
-    staticNav.id = 'nexus-static-nav';
-    staticNav.innerHTML = NODES.map(n => `<a href="${n.href}">${n.label.replace('_', ' ')}</a>`).join('');
-    document.body.appendChild(staticNav);
-
-    // Three.js Core Setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 5;
-
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      antialias: true,
-      alpha: true
-    });
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true
+      });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 

@@ -4,6 +4,11 @@
    ═══════════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap');
 
+html {
+  background-color: #05080a;
+  color-scheme: dark;
+}
+
 /* ── TOKENS ────────────────────────────────────────────── */
 :root {
   --bg: #05080a;
@@ -916,15 +921,14 @@ body.portal-open #nexus-nodes-overlay {
   color: var(--cyan);
 }
 
-/* Warp Flash Transition Overlay */
+/* Dark Space Transition Overlay */
 #nexus-transition-overlay {
   position: fixed;
   inset: 0;
-  background: #ffffff;
+  background: #05080a;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.4s var(--transition);
+  opacity: 1;
 }
 
 /* SR fallback accessible static navigation */
