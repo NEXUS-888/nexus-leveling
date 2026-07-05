@@ -71,7 +71,7 @@ function initFirebase() {
   });
 }
 
-// Dynamically load Firebase SDKs
+// Dynamically load Firebase SDKs sequentially to guarantee execution order
 (function loadFirebaseSDKs() {
   const v = "10.12.0";
   const scripts = [
@@ -79,16 +79,25 @@ function initFirebase() {
     `https://www.gstatic.com/firebasejs/${v}/firebase-auth-compat.js`,
     `https://www.gstatic.com/firebasejs/${v}/firebase-database-compat.js`
   ];
-  let loaded = 0;
-  scripts.forEach(src => {
+  let index = 0;
+  function loadNext() {
+    if (index >= scripts.length) {
+      initFirebase();
+      return;
+    }
     const s = document.createElement('script');
-    s.src = src;
+    s.src = scripts[index];
     s.onload = () => {
-      loaded++;
-      if (loaded === scripts.length) initFirebase();
+      index++;
+      loadNext();
+    };
+    s.onerror = (err) => {
+      console.error("NEXUS: Firebase SDK failed to load: " + scripts[index], err);
+      updateSyncUI();
     };
     document.head.appendChild(s);
-  });
+  }
+  loadNext();
 })();
 
 // ── STORAGE ──────────────────────────────────────────────
