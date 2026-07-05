@@ -810,8 +810,28 @@ select option { background: var(--bg2); }
   height: 100vh;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.4;
-  transition: opacity 1s var(--transition);
+  opacity: 0.12;
+  transition: opacity 0.5s var(--transition);
+}
+
+.page, .page-sm {
+  transition: opacity 0.5s var(--transition), filter 0.5s var(--transition), transform 0.5s var(--transition);
+}
+
+body.portal-open .page, body.portal-open .page-sm {
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(12px);
+  transform: scale(0.98);
+}
+
+body.portal-open #nexus-3d-bg {
+  opacity: 0.55;
+}
+
+body.portal-open #nexus-nodes-overlay {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* ── 3D NAVIGATION OVERLAYS & CONTROLS ───────────────────── */
@@ -822,6 +842,8 @@ select option { background: var(--bg2); }
   pointer-events: none;
   overflow: hidden;
   font-family: var(--font-body);
+  opacity: 0;
+  transition: opacity 0.5s var(--transition);
 }
 
 .cyber-node-label {

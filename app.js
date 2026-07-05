@@ -831,13 +831,23 @@ document.addEventListener('click', function(e) {
       if (!transitionInNode) return;
       sessionStorage.removeItem('nexus-transition-in');
 
+      // Start with portal open on load during entry zoom
+      togglePortalMode(true);
+
       flash.style.opacity = 1;
       const labels = document.querySelectorAll('.cyber-node-label');
       labels.forEach(l => l.style.opacity = 0);
 
       camera.position.set(0, 0, 0.4);
 
-      const tl = gsap.timeline();
+      const tl = gsap.timeline({
+        onComplete: () => {
+          // Auto-close portal to show page contents after exit zoom completes
+          setTimeout(() => {
+            togglePortalMode(false);
+          }, 300);
+        }
+      });
       tl.to(flash, {
         opacity: 0,
         duration: 0.6,
@@ -854,6 +864,53 @@ document.addEventListener('click', function(e) {
         opacity: 1,
         duration: 0.4
       });
+    }
+
+    // ── PORTAL TOGGLE STATE MACHINE ───────────────────────
+    let portalActive = false;
+    function togglePortalMode(forceState) {
+      const body = document.body;
+      const toggle = document.getElementById('portal-toggle-btn');
+      
+      portalActive = (typeof forceState === 'boolean') ? forceState : !portalActive;
+
+      if (portalActive) {
+        body.classList.add('portal-open');
+        if (toggle) {
+          toggle.innerHTML = '✕ CLOSE HUD';
+          toggle.style.borderColor = 'var(--magenta)';
+          toggle.style.color = 'var(--magenta)';
+        }
+        gsap.to(camera.position, {
+          z: 4.2,
+          duration: 0.6,
+          ease: 'power2.out'
+        });
+      } else {
+        body.classList.remove('portal-open');
+        if (toggle) {
+          toggle.innerHTML = '🌐 3D NAVIGATION';
+          toggle.style.borderColor = '';
+          toggle.style.color = '';
+        }
+        gsap.to(camera.position, {
+          z: 5.0,
+          duration: 0.6,
+          ease: 'power2.out'
+        });
+      }
+    }
+
+    // Inject toggle button dynamically into navbar
+    const navRight = document.querySelector('.nav-right');
+    if (navRight) {
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'btn btn-primary btn-sm';
+      toggleBtn.id = 'portal-toggle-btn';
+      toggleBtn.innerHTML = '🌐 3D NAVIGATION';
+      toggleBtn.style.marginRight = '8px';
+      toggleBtn.onclick = () => togglePortalMode();
+      navRight.insertBefore(toggleBtn, navRight.firstChild);
     }
 
     handleEntryAnimation();
