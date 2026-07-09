@@ -188,101 +188,110 @@ const KEYS = {
 // ── ROADMAP DATA ──────────────────────────────────────────
 const ROADMAP = [
   {
-    id: 'w1', label: 'Week 1', phase: 'Phase 1 — Internship sprint',
-    color: '#f07660', badge: 'amber',
+    id: 'p1',
+    phase_id: 1,
+    title: "Local Substrate & Network Primitives",
+    duration: "Weeks 1-2",
+    status: "pending",
     topics: [
-      'Linux — chmod/permissions','Linux — find command','Linux — grep/awk/sed',
-      'Linux — process management (ps, kill, top)','Linux — networking (netstat, curl)',
-      'Linux — shell redirects (>, >>, |, 2>&1)','Linux — systemctl / journalctl',
-      'AWS — IAM users, roles, policies','AWS — VPC & subnets','AWS — EC2 basics',
-      'AWS — S3 storage classes','AWS — Security Groups vs NACLs','AWS — NAT Gateway'
-    ]
+      "Git Ledger (Trunk-based development, Atomic commits)",
+      "Linux Internals (ip route, namespaces, systemd, strace)",
+      "Network Protocols (CIDR math, TCP State Machine, DNS resolution)",
+      "Packet Analysis (tcpdump, Wireshark basics)"
+    ],
+    resources: [
+      {"type": "Book", "title": "TCP/IP Illustrated, Vol 1 (Routing & TCP chapters)"},
+      {"type": "Zine", "title": "Julia Evans' Networking Zines (tcpdump, dig)"},
+      {"type": "Docs", "title": "Linux man pages (man ip-route, man tcpdump)"}
+    ],
+    primary_artifact: "Capture the exact TCP SYN/ACK handshake of your C-based E-Voting server using tcpdump.",
+    label: "Phase 1",
+    phase: "Local Substrate & Network Primitives"
   },
   {
-    id: 'w2', label: 'Week 2', phase: 'Phase 1 — Internship sprint',
-    color: '#f07660', badge: 'amber',
+    id: 'p2',
+    phase_id: 2,
+    title: "Process Isolation & Packaging",
+    duration: "Weeks 3-4",
+    status: "pending",
     topics: [
-      'Docker — images vs containers','Docker — Dockerfile writing',
-      'Docker — volumes & bind mounts','Docker — networking','Docker — docker-compose',
-      'Containerise a Python script','Multi-container app setup'
-    ]
+      "Kernel Isolation (namespaces, cgroups via unshare)",
+      "Docker Mechanics (Multi-stage builds, non-root execution)",
+      "Container Networking (Bridge networks, internal DNS)",
+      "State Management (Docker volumes)"
+    ],
+    resources: [
+      {"type": "Docs", "title": "Official Docker Engine Documentation (Networking & Storage)"},
+      {"type": "Video", "title": "Hussein Nasser: Docker Networking Explained"},
+      {"type": "Docs", "title": "man unshare, man cgroups"}
+    ],
+    primary_artifact: "Write a docker-compose.yml for Sankat. FastAPI and PostgreSQL must communicate via an internal bridge. Port 5432 remains unexposed to the host.",
+    label: "Phase 2",
+    phase: "Process Isolation & Packaging"
   },
   {
-    id: 'w3', label: 'Week 3', phase: 'Phase 1 — Internship sprint',
-    color: '#f07660', badge: 'amber',
+    id: 'p3',
+    phase_id: 3,
+    title: "The Declarative Cloud (IaC)",
+    duration: "Months 2-3",
+    status: "pending",
     topics: [
-      'Flask app setup','Deploy Flask to EC2','S3 integration from app',
-      'IAM roles attached to EC2','GitHub repo + README','Project debugging'
-    ]
+      "Cloud Networking (VPCs, Subnets, Internet/NAT Gateways, Security Groups)",
+      "Terraform Syntax (HCL, Providers, Resources, Variables)",
+      "State Management (Remote backends, State locking)",
+      "Modular Architecture (Terraform modules)"
+    ],
+    resources: [
+      {"type": "Docs", "title": "Terraform Official Registry & HashiCorp Learn"},
+      {"type": "Docs", "title": "AWS/Azure VPC Architectural Concepts"}
+    ],
+    primary_artifact: "Write a Terraform manifest provisioning an isolated Cloud VPC, deploying your containerized Sankat backend onto a VM inside the public subnet.",
+    label: "Phase 3",
+    phase: "The Declarative Cloud (IaC)"
   },
   {
-    id: 'w4', label: 'Week 4', phase: 'Phase 1 — Internship sprint',
-    color: '#f07660', badge: 'amber',
+    id: 'p4',
+    phase_id: 4,
+    title: "Global Orchestration (Kubernetes)",
+    duration: "Months 4-5",
+    status: "pending",
     topics: [
-      'AWS revision — all 7 questions','Project demo practice (explain in 2 min)',
-      'Interview Q&A prep','Applications sent (target: 50+)'
-    ]
+      "Go Deep Dive (Goroutines, channels - to understand K8s controllers)",
+      "Control Plane Architecture (etcd, kube-apiserver, kubelet, kube-proxy)",
+      "Declarative Workloads (Pods, Deployments, ReplicaSets)",
+      "Service Networking (ClusterIP, NodePort, Ingress Controllers)",
+      "Configuration (ConfigMaps, Secrets, Persistent Volumes)"
+    ],
+    resources: [
+      {"type": "Docs", "title": "Kubernetes Official Documentation (Concepts > Architecture)"},
+      {"type": "Repo", "title": "Kelsey Hightower: Kubernetes the Hard Way"},
+      {"type": "Video", "title": "CNCF YouTube: KubeCon Networking Demystified"}
+    ],
+    primary_artifact: "Strip Docker Compose. Write K8s YAML manifests for Sankat. Deploy locally using K3s or Minikube.",
+    label: "Phase 4",
+    phase: "Global Orchestration (Kubernetes)"
   },
   {
-    id: 'm2', label: 'Month 2', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
+    id: 'p5',
+    phase_id: 5,
+    title: "Automated Execution & Telemetry",
+    duration: "Month 6",
+    status: "pending",
     topics: [
-      'AWS Cloud Practitioner — domains','Bash scripting basics',
-      'Bash — loops & conditionals','Bash — functions & scripts',
-      'TLCL book — full read','Linux — file system deep dive'
-    ]
-  },
-  {
-    id: 'm34', label: 'Months 3–4', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
-    topics: [
-      'K8s — pods','K8s — deployments','K8s — services & ingress',
-      'K8s — configmaps & secrets','K8s — namespaces','Minikube local setup',
-      'KodeKloud lab — pods','KodeKloud lab — deployments','Deploy project on K8s'
-    ]
-  },
-  {
-    id: 'm5', label: 'Month 5', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
-    topics: [
-      'GitHub Actions — basics','GitHub Actions — build pipeline',
-      'GitHub Actions — Docker build & push','Jenkins — basics','CI/CD debugging'
-    ]
-  },
-  {
-    id: 'm6', label: 'Month 6', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
-    topics: [
-      'Terraform — HCL basics','Terraform — provision EC2',
-      'Terraform — VPC & networking','Terraform — variables & outputs',
-      'AWS SAA — compute domain','AWS SAA — networking domain',
-      'AWS SAA — storage domain','AWS SAA — databases domain'
-    ]
-  },
-  {
-    id: 'm78', label: 'Months 7–8', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
-    topics: [
-      'Prometheus setup','Prometheus — scrape configs','Grafana dashboards',
-      'Grafana — alerting','ELK — Elasticsearch basics','ELK — Kibana'
-    ]
-  },
-  {
-    id: 'm910', label: 'Months 9–10', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
-    topics: [
-      'Go — Tour of Go','Go — structs & interfaces','Go — goroutines',
-      'Go — HTTP client/server','Go — CLI tool build','Read K8s source code'
-    ]
-  },
-  {
-    id: 'm1112', label: 'Months 11–12', phase: 'Phase 2 — Job roadmap',
-    color: '#2dd4bf', badge: 'blue',
-    topics: [
-      'Capstone — GitHub Actions pipeline','Capstone — Docker + ECR',
-      'Capstone — EKS deployment','Capstone — Terraform infra',
-      'Capstone — Grafana monitoring','Portfolio polish','Job applications'
-    ]
+      "CI/CD Pipelines (Automated testing, image building, registry pushing)",
+      "Infrastructure Automation (Terraform apply via CI)",
+      "Observability (Prometheus metrics collection)",
+      "Data Visualization (Grafana Dashboards)",
+      "Structured Logging"
+    ],
+    resources: [
+      {"type": "Docs", "title": "GitHub Actions Official Documentation"},
+      {"type": "Docs", "title": "Prometheus Official Concepts Guide"},
+      {"type": "Docs", "title": "Grafana Dashboard Configuration Docs"}
+    ],
+    primary_artifact: "Build a GitHub Actions pipeline that auto-deploys your Docker image to K3s on main branch push. Monitor pod CPU with Prometheus.",
+    label: "Phase 5",
+    phase: "Automated Execution & Telemetry"
   }
 ];
 

@@ -128,14 +128,16 @@ function initForm() {
   const phaseSel = document.getElementById('phase-sel');
   ROADMAP.forEach(p => {
     const o = document.createElement('option');
-    o.value = p.id; o.textContent = `${p.phase} — ${p.label}`;
+    o.value = p.id; 
+    o.textContent = `Phase ${p.phase_id}: ${p.title} (${p.duration})`;
     phaseSel.appendChild(o);
   });
 
   const filterSel = document.getElementById('filter-phase');
   ROADMAP.forEach(p => {
     const o = document.createElement('option');
-    o.value = p.id; o.textContent = `${p.label}`;
+    o.value = p.id; 
+    o.textContent = `Phase ${p.phase_id}: ${p.title}`;
     filterSel.appendChild(o);
   });
 

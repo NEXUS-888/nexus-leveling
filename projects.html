@@ -107,7 +107,8 @@ function initForm() {
   const sel = document.getElementById('proj-phase');
   ROADMAP.forEach(p => {
     const o = document.createElement('option');
-    o.value = p.id; o.textContent = `${p.phase} — ${p.label}`;
+    o.value = p.id; 
+    o.textContent = `Phase ${p.phase_id}: ${p.title}`;
     sel.appendChild(o);
   });
 }
@@ -126,7 +127,7 @@ function submitProject() {
     id: Date.now(),
     name,
     desc,
-    phase: phase ? `${phase.phase} — ${phase.label}` : phaseId,
+    phase: phase ? `Phase ${phase.phase_id}: ${phase.title}` : phaseId,
     phaseId,
     tech,
     github: document.getElementById('proj-github').value.trim(),
