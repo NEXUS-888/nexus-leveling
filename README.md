@@ -1,52 +1,45 @@
-# NEXUS leveling — Vishal's Personal Learning Dashboard
+# Vishal's Engineering Portfolio Tracker
 
-A personal learning tracker built as a static website. No backend, no database — everything saves to `localStorage` in your browser.
+A static portfolio and engineering journey tracker. It helps you collect proof while you build: projects, daily logs, snippets, practice cards, applications, and an Obsidian-friendly Markdown export.
 
-## Features
+## What This Is For
 
-- **Dashboard** — streak, heatmap, built-vs-watched ratio chart, phase progress, data backup/restore
-- **Daily Log** — log what you learned + built, tutorial time tracker, tutorial hell warning, Notion export
-- **Roadmap** — full 12-month roadmap with click-to-mark-done topics
-- **Resources** — every course/book/lab from the roadmap with visited tracking
-- **Flashcards** — 20 built-in interview cards (Linux, AWS, Docker, K8s) + add your own custom cards
-- **Projects** — track hands-on builds with tech stack, GitHub links, deploy status, and progress stats
-- **Job Tracker** — log applications, track status, follow-up alerts, target companies
-- **Cheatsheet** — personal command reference with 40+ built-in DevOps commands
-- **Data Backup** — export/import all your data as JSON so you never lose progress
-- **Responsive** — hamburger menu for mobile devices
+- **Home** - portfolio overview, proof stats, recent notes, featured projects, and Obsidian vault link
+- **Journal** - daily engineering logs that can export to Markdown for Obsidian
+- **Build Plan** - a portfolio roadmap from positioning to project proof and career readiness
+- **Library** - resources for Obsidian, documentation, GitHub, deployment, and career storytelling
+- **Practice** - flashcards for portfolio reviews, interview stories, GitHub, and writing
+- **Projects** - track project descriptions, tech stacks, GitHub links, live URLs, and status
+- **Applications** - track companies, roles, platforms, follow-ups, and outcomes
+- **Snippets** - searchable command/reference library
 
-## Deploy to Vercel (2 minutes)
+## Obsidian Setup
 
-```bash
-# 1. Create a GitHub repo called devops-tracker
-# 2. Push these files
-git init
-git add .
-git commit -m "initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/devops-tracker.git
-git push -u origin main
+1. Create an Obsidian vault named `Engineering Journey`.
+2. Suggested folders:
+   - `Daily Logs`
+   - `Projects`
+   - `Decisions`
+   - `Bugs Fixed`
+   - `Snippets`
+   - `Career`
+3. Use the Home page vault input if your vault has a different name.
+4. In Journal, use **Export Markdown for Obsidian** and place the exported note in your vault.
 
-# 3. Go to vercel.com → Import Git Repository → select devops-tracker → Deploy
-# Your site will be live at devops-tracker.vercel.app
-```
+Yes, this helps document your engineering journey if you keep it honest and consistent. Obsidian is best for raw thinking; this website is best for public proof. Do not publish everything. Publish the cleaned-up parts that show what you built, how you debugged, and what decisions you made.
 
-## Deploy to GitHub Pages (alternative)
+## Local Usage
 
-```bash
-# In your GitHub repo → Settings → Pages → Source: main branch → / (root) → Save
-# Site will be at: YOUR_USERNAME.github.io/devops-tracker
-```
+Open `index.html` in your browser. No server or build step is required.
 
-## Local usage
+## Deployment
 
-Just open `index.html` in your browser. No server needed.
+Deploy the folder as a static site with GitHub Pages, Vercel, Netlify, or any static host.
 
 ## Data
 
-All data saves to `localStorage` in your browser. Use the **Download backup** button on the Dashboard to export your data as JSON. Use **Import backup** to restore from a backup file. You can also use the **Notion export** button in Daily Log to back up entries in markdown format.
+All data saves in browser `localStorage`. Use the Home page backup buttons if you keep them enabled, and periodically export journal Markdown into Obsidian so your notes survive browser resets.
 
-## Tech stack
+## Tech Stack
 
-Pure HTML + CSS + Vanilla JS. No frameworks. Chart.js via CDN for charts.
-
+Pure HTML, CSS, and vanilla JavaScript.

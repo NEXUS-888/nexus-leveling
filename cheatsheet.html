@@ -25,8 +25,8 @@
 
 <div class="page">
   <div class="page-header animate-in">
-    <h1>Command Cheatsheet</h1>
-    <p>Your personal reference. Add commands as you learn them. Search instantly.</p>
+    <h1>Engineering Snippets</h1>
+    <p>Your personal reference for commands, prompts, debugging notes, and portfolio-writing patterns.</p>
   </div>
 
   <div class="animate-in delay-1" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
@@ -48,9 +48,9 @@
       <div>
         <label>Category</label>
         <select id="cmd-cat">
-          <option>Linux</option><option>Docker</option><option>Kubernetes</option>
-          <option>Git</option><option>AWS CLI</option><option>Terraform</option>
-          <option>Bash</option><option>Networking</option><option>Other</option>
+          <option>Git</option><option>Linux</option><option>JavaScript</option>
+          <option>Python</option><option>SQL</option><option>Docs</option>
+          <option>Debugging</option><option>Interview</option><option>Other</option>
         </select>
       </div>
       <div>
@@ -75,7 +75,7 @@
       <div class="section-title" style="margin-top:0;margin-bottom:0;">Built-in reference (from your roadmap)</div>
       <button class="btn btn-sm" onclick="loadBuiltins()" id="builtin-btn">Load built-in commands</button>
     </div>
-    <p style="font-size:13px;color:var(--text2);">Click above to pre-load 40+ essential DevOps commands into your cheatsheet.</p>
+    <p style="font-size:13px;color:var(--text2);">Click above to pre-load useful engineering commands, then add your own snippets as you learn.</p>
   </div>
 
   <div id="cmds-list"></div>
@@ -208,7 +208,9 @@ function render() {
   const catColors = {
     Linux:'badge-blue', Docker:'badge-green', Kubernetes:'badge-purple',
     Git:'badge-amber', 'AWS CLI':'badge-amber', Terraform:'badge-blue',
-    Bash:'badge-gray', Networking:'badge-gray', Other:'badge-gray'
+    Bash:'badge-gray', Networking:'badge-gray', JavaScript:'badge-blue',
+    Python:'badge-green', SQL:'badge-purple', Docs:'badge-gray',
+    Debugging:'badge-amber', Interview:'badge-purple', Other:'badge-gray'
   };
 
   if (!cmds.length) {

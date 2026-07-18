@@ -25,8 +25,8 @@
 
 <div class="page-sm">
   <div class="page-header animate-in">
-    <h1>Daily Log</h1>
-    <p>Log what you learned and what you built. No building = no progress.</p>
+    <h1>Engineering Journal</h1>
+    <p>Capture what you learned, what you built, what broke, and what changed in your thinking.</p>
   </div>
 
   <!-- TUTORIAL HELL WARNING -->
@@ -51,28 +51,28 @@
 
     <div class="form-group">
       <label>Custom topic (optional override)</label>
-      <input type="text" id="custom-topic" placeholder="e.g. iptables deep dive">
+      <input type="text" id="custom-topic" placeholder="e.g. auth bug, portfolio case study, API design">
     </div>
 
     <div class="form-group">
       <label>What I learned *</label>
-      <textarea id="learned" placeholder="Key concepts, commands, ideas you understood today..."></textarea>
+      <textarea id="learned" placeholder="Key concepts, decisions, errors, tradeoffs, or ideas you understood today..."></textarea>
     </div>
 
     <div class="form-group">
       <label>What I built / did hands-on *</label>
-      <textarea id="built-txt" placeholder="Commands ran, errors fixed, project progress... (required)"></textarea>
+      <textarea id="built-txt" placeholder="Code changed, command run, bug fixed, README improved, project progress..."></textarea>
     </div>
 
     <div style="margin-bottom:12px;">
-      <label style="margin-bottom:8px;">Tutorial time tracker</label>
+      <label style="margin-bottom:8px;">Research vs build tracker</label>
       <div class="form-row">
         <div>
-          <label>Minutes watched</label>
+          <label>Minutes researching</label>
           <input type="number" id="watch-mins" placeholder="0" min="0">
         </div>
         <div>
-          <label>Minutes coding / building</label>
+          <label>Minutes coding / documenting</label>
           <input type="number" id="code-mins" placeholder="0" min="0">
         </div>
       </div>
@@ -86,19 +86,19 @@
 
     <div class="toggle-wrap" style="margin-bottom:16px;" onclick="toggleBuilt()">
       <div class="toggle-track" id="built-toggle"><div class="toggle-knob"></div></div>
-      <span>I built / deployed something today (not just watched)</span>
+      <span>I created visible proof today: code, docs, demo, or notes</span>
     </div>
 
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="addEntry()">✓ Log today</button>
       <button class="btn" onclick="clearForm()">Clear</button>
-      <button class="btn" onclick="exportNotion()">↗ Export to Notion</button>
+      <button class="btn" onclick="exportObsidian()">Export Markdown for Obsidian</button>
     </div>
   </div>
 
   <!-- EXPORT BOX -->
   <div class="card" id="export-card" style="display:none; margin-bottom:1.5rem;">
-    <div class="section-title" style="margin-top:0;">Notion export — paste into any Notion page</div>
+    <div class="section-title" style="margin-top:0;">Obsidian export - save as a Markdown note in your vault</div>
     <textarea class="code-block" id="export-box" readonly style="min-height:200px; width:100%; font-size:11px;"></textarea>
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button class="btn btn-primary btn-sm" onclick="copyExport()">Copy to clipboard</button>
@@ -285,7 +285,7 @@ function renderEntries() {
   }).join('');
 }
 
-function exportNotion() {
+function legacyExportMarkdown() {
   const entries = S.get(KEYS.entries) || [];
   if (!entries.length) { toast('No entries to export.', 'warning'); return; }
   const lines = ['# NEXUS leveling — Learning Log', '', '---', ''];
@@ -297,6 +297,26 @@ function exportNotion() {
     if (e.blockers) lines.push(`**Blockers:** ${e.blockers}`);
     if (e.watchMins || e.codeMins) lines.push(`**Time:** ${e.codeMins}m building / ${e.watchMins}m watching`);
     lines.push(`**Built something:** ${e.built ? 'Yes ✓' : 'No'}`);
+    lines.push('', '---', '');
+  });
+  document.getElementById('export-box').value = lines.join('\n');
+  document.getElementById('export-card').style.display = 'block';
+  document.getElementById('export-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function exportObsidian() {
+  const entries = S.get(KEYS.entries) || [];
+  if (!entries.length) { toast('No entries to export.', 'warning'); return; }
+  const lines = ['# Engineering Journey Log', '', 'Tags: #engineering-journey #daily-log', '', '---', ''];
+  entries.forEach(e => {
+    lines.push(`## ${e.dateLabel} - ${e.topic}`);
+    lines.push(`**Phase:** ${e.phase}`);
+    lines.push(`**Learned:** ${e.learned}`);
+    lines.push(`**Built:** ${e.builtTxt}`);
+    if (e.blockers) lines.push(`**Blockers:** ${e.blockers}`);
+    if (e.watchMins || e.codeMins) lines.push(`**Time:** ${e.codeMins}m building/documenting / ${e.watchMins}m researching`);
+    lines.push(`**Visible proof:** ${e.built ? 'Yes' : 'No'}`);
+    lines.push('Tags: #daily-log');
     lines.push('', '---', '');
   });
   document.getElementById('export-box').value = lines.join('\n');

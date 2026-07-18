@@ -3,298 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NEXUS leveling — Dashboard</title>
+<title>Vishal Portfolio - Engineering Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <nav>
-  <div class="nav-brand">⚡ <span>NEXUS</span>leveling</div>
-  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">☰</button>
+  <div class="nav-brand"><span>VISHAL</span> portfolio</div>
+  <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">Menu</button>
   <div class="nav-links">
-    <a href="index.html" class="active">Dashboard</a>
-    <a href="log.html">Daily Log</a>
-    <a href="roadmap.html">Roadmap</a>
-    <a href="resources.html">Resources</a>
-    <a href="flashcards.html">Flashcards</a>
+    <a href="index.html" class="active">Home</a>
+    <a href="log.html">Journal</a>
+    <a href="roadmap.html">Build Plan</a>
+    <a href="resources.html">Library</a>
+    <a href="flashcards.html">Practice</a>
     <a href="projects.html">Projects</a>
-    <a href="jobs.html">Jobs</a>
-    <a href="cheatsheet.html">Cheatsheet</a>
+    <a href="jobs.html">Applications</a>
+    <a href="cheatsheet.html">Snippets</a>
   </div>
   <div class="nav-right">
-    <div class="streak-pill" id="streak-pill">🔥 0d streak</div>
+    <div class="streak-pill" id="streak-pill">0d log streak</div>
   </div>
 </nav>
 
-<div class="page">
-  <div id="why-banner" class="animate-in" style="display:none; background:rgba(13,31,66,0.7); border:1px solid rgba(26,58,122,0.4); border-radius:var(--radius); padding:12px 16px; margin-bottom:1.5rem; font-size:13px; color:var(--text2);">
-    <span style="color:var(--text3); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Why you're doing this</span><br>
-    <span id="why-text" style="color:var(--text); font-weight:500;"></span>
-  </div>
-
-  <div id="why-setup" class="animate-in" style="background:var(--glass-bg); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-    <span style="font-size:13px; color:var(--text2); flex:1;">Set your goal so it shows every day on this dashboard</span>
-    <input type="text" id="why-input" placeholder="e.g. Land a DevOps job at Razorpay by July 2027" style="flex:2; min-width:220px;">
-    <button class="btn btn-primary btn-sm" onclick="saveWhy()">Save goal</button>
-  </div>
-
-  <div class="backup-banner animate-in delay-1" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+<main class="page">
+  <section class="portfolio-hero animate-in">
     <div>
-      <div class="backup-info" style="margin-bottom:4px;">☁️ <strong id="fb-sync-status">Loading sync status...</strong></div>
-      <div style="font-size:12px; color:var(--text2);">Sync your progress across devices automatically using Firebase.</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;">
-      <button class="btn btn-green btn-sm" id="fb-auth-btn">Sign in with Google</button>
-      <button class="btn btn-sm" onclick="downloadBackup()">⬇ Manual JSON backup</button>
-      <button class="btn btn-sm" onclick="triggerImport()">⬆ Import</button>
-    </div>
-  </div>
-
-  <div class="stats-grid animate-in delay-2" id="stats-grid"></div>
-
-  <div class="two-col animate-in delay-3" style="margin-bottom:1.5rem;">
-    <div class="card">
-      <div class="section-title" style="margin-top:0;">90-day activity</div>
-      <div class="heatmap" id="heatmap"></div>
-      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; font-size:11px; color:var(--text3);">
-        <span>Less</span>
-        <div style="width:12px;height:12px;border-radius:2px;background:var(--bg3);border:1px solid var(--border);"></div>
-        <div style="width:12px;height:12px;border-radius:2px;background:#1a5c3a;"></div>
-        <div style="width:12px;height:12px;border-radius:2px;background:#25a05f;"></div>
-        <div style="width:12px;height:12px;border-radius:2px;background:var(--green);"></div>
-        <span>More</span>
+      <div class="section-title" style="margin-top:0;"><span class="live-dot"></span>SYSTEM ONLINE &bull; VISHAL PORTFOLIO</div>
+      <h1>Building in public, documenting the journey, and turning projects into proof.</h1>
+      <p>
+        This site is your portfolio operating system: track hands-on builds, record daily engineering journal entries,
+        collect reusable snippets, practice interview stories, and connect everything back to your Obsidian vault.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1.2rem;">
+        <a class="btn btn-primary" href="projects.html">⚡ View projects</a>
+        <a class="btn" href="log.html">📝 Open journal</a>
+        <a class="btn btn-green" id="obsidian-link" href="obsidian://open?vault=Engineering%20Journey">💎 Open Obsidian vault</a>
       </div>
     </div>
-    <div class="card">
-      <div class="section-title" style="margin-top:0;">Built vs watched ratio</div>
-      <div style="position:relative; height:160px;">
-        <canvas id="ratio-chart"></canvas>
+    <div class="portfolio-signal">
+      <div class="section-title" style="margin-top:0;">Current Focus & Goal</div>
+      <div id="why-banner" style="display:none;">
+        <div id="why-text" class="signal-text"></div>
       </div>
-      <div id="ratio-legend" style="margin-top:10px; font-size:12px; color:var(--text2); text-align:center;"></div>
+      <div id="why-setup">
+        <label>Portfolio goal</label>
+        <input type="text" id="why-input" placeholder="e.g. Build 3 strong backend projects & document decisions">
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="saveWhy()">Save goal</button>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card animate-in delay-4" style="margin-bottom:1.5rem;">
-    <div class="section-title" style="margin-top:0;">Roadmap progress</div>
+  <section class="card animate-in delay-1" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-top:0;">Obsidian workflow</div>
+    <div class="three-col">
+      <div>
+        <div class="entry-topic">Capture privately</div>
+        <div class="entry-body">Use Obsidian for raw notes: bugs, decisions, commands, architecture sketches, daily logs.</div>
+      </div>
+      <div>
+        <div class="entry-topic">Polish selectively</div>
+        <div class="entry-body">Turn the best notes into project case studies, weekly summaries, and interview stories.</div>
+      </div>
+      <div>
+        <div class="entry-topic">Publish as proof</div>
+        <div class="entry-body">This website becomes the public layer: projects, snippets, progress, and applications.</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="vault-name" placeholder="Obsidian vault name, e.g. Engineering Journey" style="max-width:320px;">
+      <button class="btn btn-sm" onclick="saveVaultName()">Update vault link</button>
+      <button class="btn btn-sm" onclick="downloadBackup()">Download JSON backup</button>
+      <button class="btn btn-sm" onclick="triggerImport()">Import backup</button>
+      <span style="font-size:12px;color:var(--text3);">Tip: rename this to match your exact Obsidian vault name.</span>
+    </div>
+  </section>
+
+  <section class="stats-grid animate-in delay-2" id="stats-grid"></section>
+
+  <section class="two-col animate-in delay-3" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="section-title" style="margin:0;">Recent engineering notes</div>
+        <a href="log.html" class="btn btn-sm">View all</a>
+      </div>
+      <div id="recent-entries"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="section-title" style="margin:0;">Featured projects</div>
+        <a href="projects.html" class="btn btn-sm">Manage</a>
+      </div>
+      <div id="featured-projects"></div>
+    </div>
+  </section>
+
+  <section class="card animate-in delay-4">
+    <div class="section-title" style="margin-top:0;">Portfolio build plan</div>
     <div id="phase-progress"></div>
-  </div>
-
-  <div class="card animate-in delay-5" style="margin-bottom:1.5rem;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-      <div class="section-title" style="margin-top:0; margin-bottom:0;">Recent entries</div>
-      <a href="log.html" class="btn btn-sm">View all →</a>
-    </div>
-    <div id="recent-entries"></div>
-  </div>
-
-  <div class="card animate-in delay-6">
-    <div class="section-title" style="margin-top:0;">Weekly topics learned</div>
-    <div style="position:relative; height:180px;">
-      <canvas id="weekly-chart"></canvas>
-    </div>
-  </div>
-</div>
+  </section>
+</main>
 
 <script src="app.js"></script>
 <script>
-let ratioChartInstance = null;
-let weeklyChartInstance = null;
-
 function saveWhy() {
   const val = document.getElementById('why-input').value.trim();
   if (!val) return;
   S.set(KEYS.why, val);
   renderWhy();
-  toast('Goal saved!', 'success');
+  toast('Goal saved.', 'success');
 }
 
 function renderWhy() {
   const why = S.get(KEYS.why);
   document.getElementById('why-banner').style.display = why ? 'block' : 'none';
-  document.getElementById('why-setup').style.display = why ? 'none' : 'flex';
+  document.getElementById('why-setup').style.display = why ? 'none' : 'block';
   if (why) document.getElementById('why-text').textContent = why;
 }
 
-let _statsSnapshot = '';
+function saveVaultName() {
+  const name = document.getElementById('vault-name').value.trim();
+  if (!name) return;
+  localStorage.setItem('portfolio_obsidian_vault', name);
+  renderVaultLink();
+  toast('Obsidian link updated.', 'success');
+}
+
+function renderVaultLink() {
+  const name = localStorage.getItem('portfolio_obsidian_vault') || 'Engineering Journey';
+  const link = document.getElementById('obsidian-link');
+  document.getElementById('vault-name').value = name;
+  link.href = `obsidian://open?vault=${encodeURIComponent(name)}`;
+}
+
 function renderStats() {
   const entries = S.get(KEYS.entries) || [];
-  const streak = calcStreak(entries);
-  const longest = calcLongestStreak(entries);
-  const built = entries.filter(e => e.built).length;
-  const total = entries.length;
-  const pct = total ? Math.round(built / total * 100) : 0;
-  const prog = getRoadmapProgress();
+  const projects = getProjects();
   const apps = S.get(KEYS.apps) || [];
-  const snapshot = `${streak}|${longest}|${built}|${total}|${pct}|${prog.pct}|${prog.completed}|${prog.total}|${apps.length}|${getFlashScore()}`;
-  if (snapshot === _statsSnapshot) return;
-  _statsSnapshot = snapshot;
+  const prog = getRoadmapProgress();
+  const shipped = projects.filter(p => p.status === 'deployed').length;
+  const decisions = entries.filter(e => /decision|tradeoff|architecture|debug|bug/i.test(`${e.learned} ${e.builtTxt || ''}`)).length;
+
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Current streak</div><div class="stat-val" style="color:var(--amber);">${streak}d</div><div class="stat-sub">Best: ${longest}d</div></div>
-    <div class="stat-card"><div class="stat-label">Days logged</div><div class="stat-val">${total}</div><div class="stat-sub">Keep going</div></div>
-    <div class="stat-card"><div class="stat-label">Built something</div><div class="stat-val" style="color:var(--green);">${pct}%</div><div class="stat-sub">${built} of ${total} days</div></div>
-    <div class="stat-card"><div class="stat-label">Roadmap done</div><div class="stat-val" style="color:var(--accent);">${prog.pct}%</div><div class="stat-sub">${prog.completed}/${prog.total} topics</div></div>
-    <div class="stat-card"><div class="stat-label">Jobs applied</div><div class="stat-val">${apps.length}</div><div class="stat-sub">Target: 50+</div></div>
-    <div class="stat-card"><div class="stat-label">Flashcard score</div><div class="stat-val" style="color:var(--purple);">${getFlashScore()}%</div><div class="stat-sub">Keep reviewing</div></div>
+    <div class="stat-card"><div class="stat-label">Log streak</div><div class="stat-val" style="color:var(--amber);">${calcStreak(entries)}d</div><div class="stat-sub">Best: ${calcLongestStreak(entries)}d</div></div>
+    <div class="stat-card"><div class="stat-label">Journal entries</div><div class="stat-val">${entries.length}</div><div class="stat-sub">Raw material for posts</div></div>
+    <div class="stat-card"><div class="stat-label">Projects</div><div class="stat-val" style="color:var(--green);">${projects.length}</div><div class="stat-sub">${shipped} deployed</div></div>
+    <div class="stat-card"><div class="stat-label">Build plan</div><div class="stat-val" style="color:var(--accent);">${prog.pct}%</div><div class="stat-sub">${prog.completed}/${prog.total} topics</div></div>
+    <div class="stat-card"><div class="stat-label">Decision notes</div><div class="stat-val" style="color:var(--purple);">${decisions}</div><div class="stat-sub">Debugging and tradeoffs</div></div>
+    <div class="stat-card"><div class="stat-label">Applications</div><div class="stat-val">${apps.length}</div><div class="stat-sub">Tracked follow-ups</div></div>
   `;
-}
-
-function getFlashScore() {
-  return getFlashcardMastery();
-}
-
-let _heatmapData = '';
-function renderHeatmap() {
-  const entries = S.get(KEYS.entries) || [];
-  const byDate = {};
-  entries.forEach(e => {
-    byDate[e.date] = (byDate[e.date] || 0) + (e.built ? 2 : 1);
-  });
-  const snapshot = JSON.stringify(byDate);
-  if (snapshot === _heatmapData) return;
-  _heatmapData = snapshot;
-  const cells = [];
-  const today = new Date();
-  for (let i = 89; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    const val = byDate[key] || 0;
-    const cls = val === 0 ? '' : val === 1 ? 'l1' : val === 2 ? 'l2' : val <= 4 ? 'l3' : 'l4';
-    cells.push(`<div class="heatmap-cell ${cls}" title="${key}: ${val} activity"></div>`);
-  }
-  document.getElementById('heatmap').innerHTML = cells.join('');
-}
-
-function renderRatioChart() {
-  const entries = S.get(KEYS.entries) || [];
-  const built = entries.filter(e => e.built).length;
-  const watched = entries.length - built;
-  const canvas = document.getElementById('ratio-chart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (ratioChartInstance) ratioChartInstance.destroy();
-  ratioChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Built something', 'Watch only'],
-      datasets: [{ data: [built || 1, watched], backgroundColor: ['#3ecf8e', '#2a3148'], borderWidth: 0 }]
-    },
-    options: {
-      cutout: '72%',
-      plugins: { legend: { display: false } },
-      responsive: true, maintainAspectRatio: false
-    }
-  });
-  document.getElementById('ratio-legend').innerHTML =
-    `<span style="color:var(--green);">■</span> Built: ${built} &nbsp; <span style="color:var(--text3);">■</span> Watch-only: ${watched}`;
-}
-
-let _phaseSnapshot = '';
-function renderPhaseProgress() {
-  const done = S.get(KEYS.roadmap) || {};
-  const snapshot = JSON.stringify(done);
-  if (snapshot === _phaseSnapshot) return;
-  _phaseSnapshot = snapshot;
-  const html = ROADMAP.map(p => {
-    const count = (done[p.id] || []).length;
-    const total = p.topics.length;
-    const pct = Math.round(count / total * 100);
-    const color = pct === 100 ? 'green' : pct > 0 ? '' : '';
-    return `
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:13px;color:var(--text);">${p.label}</span>
-          <span style="font-size:12px;color:var(--text2);">${count}/${total}</span>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill ${color}" style="width:${pct}%"></div>
-        </div>
-      </div>`;
-  }).join('');
-  document.getElementById('phase-progress').innerHTML = html;
-}
-
-let _weeklySnapshot = '';
-function renderWeeklyChart() {
-  const entries = S.get(KEYS.entries) || [];
-  const weeks = {};
-  entries.forEach(e => {
-    const d = new Date(e.date);
-    const weekStart = new Date(d);
-    weekStart.setDate(d.getDate() - d.getDay());
-    const key = weekStart.toISOString().split('T')[0];
-    weeks[key] = (weeks[key] || 0) + 1;
-  });
-  const snapshot = JSON.stringify(weeks);
-  if (snapshot === _weeklySnapshot) return;
-  _weeklySnapshot = snapshot;
-  const labels = Object.keys(weeks).sort().slice(-8).map(k => {
-    const d = new Date(k);
-    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-  });
-  const data = Object.keys(weeks).sort().slice(-8).map(k => weeks[k]);
-  const canvas = document.getElementById('weekly-chart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (weeklyChartInstance) weeklyChartInstance.destroy();
-  weeklyChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{ label: 'Topics logged', data, backgroundColor: '#1a3a7a', borderColor: '#4f8ef7', borderWidth: 1, borderRadius: 4 }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#555e7a', font: { size: 11 } }, grid: { color: '#2a3148' } },
-        y: { ticks: { color: '#555e7a', font: { size: 11 }, stepSize: 1 }, grid: { color: '#2a3148' } }
-      },
-      responsive: true, maintainAspectRatio: false
-    }
-  });
 }
 
 function renderRecent() {
   const entries = (S.get(KEYS.entries) || []).slice(0, 3);
-  if (!entries.length) {
-    document.getElementById('recent-entries').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No entries yet. <a href="log.html">Log your first day →</a></div>';
-    return;
-  }
-  document.getElementById('recent-entries').innerHTML = entries.map(e => `
+  document.getElementById('recent-entries').innerHTML = entries.length ? entries.map(e => `
     <div class="entry-card">
-      <div class="entry-head">
-        <div style="display:flex;gap:8px;align-items:center;">
-          <span class="badge badge-gray">${e.date}</span>
-          <span class="badge badge-blue">${e.phase}</span>
-          ${e.built ? '<span class="badge badge-green">Built ✓</span>' : ''}
-        </div>
-      </div>
-      <div class="entry-topic">${e.topic}</div>
-      <div class="entry-body">${e.learned.substring(0, 120)}${e.learned.length > 120 ? '...' : ''}</div>
-    </div>`).join('');
+      <div class="entry-head"><span class="badge badge-gray">${e.dateLabel || e.date}</span><span class="badge badge-blue">${e.topic}</span></div>
+      <div class="entry-body">${escHtml((e.learned || '').substring(0, 150))}${(e.learned || '').length > 150 ? '...' : ''}</div>
+    </div>`).join('') : '<div class="empty">No notes yet. Start with one honest engineering log.</div>';
 }
 
-renderWhy();
-renderStats();
-renderHeatmap();
-renderRatioChart();
-renderPhaseProgress();
-renderWeeklyChart();
-renderRecent();
+function renderProjects() {
+  const projects = getProjects().slice(0, 3);
+  document.getElementById('featured-projects').innerHTML = projects.length ? projects.map(p => `
+    <div class="entry-card">
+      <div class="entry-head"><span class="entry-topic">${escHtml(p.name)}</span><span class="badge badge-gray">${escHtml(p.status)}</span></div>
+      <div class="entry-body">${escHtml((p.desc || '').substring(0, 140))}${(p.desc || '').length > 140 ? '...' : ''}</div>
+      ${p.github ? `<a href="${escHtml(p.github)}" target="_blank" rel="noopener">GitHub</a>` : ''}
+      ${p.live ? `<a href="${escHtml(p.live)}" target="_blank" rel="noopener" style="margin-left:8px;">Live</a>` : ''}
+    </div>`).join('') : '<div class="empty">No projects yet. Add your first proof piece.</div>';
+}
 
-window.addEventListener('nexus-state-change', function(e) {
-  if (e.detail.key === KEYS.entries || e.detail.key === KEYS.roadmap || e.detail.key === KEYS.cards || e.detail.key === KEYS.apps || e.detail.key === KEYS.why) {
-    renderWhy();
-    renderStats();
-    renderHeatmap();
-    renderRatioChart();
-    renderPhaseProgress();
-    renderWeeklyChart();
-    renderRecent();
-  }
-});
+function renderPhaseProgress() {
+  const done = S.get(KEYS.roadmap) || {};
+  document.getElementById('phase-progress').innerHTML = ROADMAP.map(p => {
+    const count = (done[p.id] || []).length;
+    const pct = Math.round(count / p.topics.length * 100);
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:13px;color:var(--text);">${p.label}: ${p.title}</span>
+          <span style="font-size:12px;color:var(--text2);">${count}/${p.topics.length}</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill ${pct === 100 ? 'green' : ''}" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+}
+
+function renderHome() {
+  renderWhy();
+  renderVaultLink();
+  renderStats();
+  renderRecent();
+  renderProjects();
+  renderPhaseProgress();
+}
+
+renderHome();
+window.addEventListener('nexus-state-change', renderHome);
 </script>
 </body>
 </html>

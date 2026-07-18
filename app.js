@@ -372,6 +372,154 @@ const RESOURCES = [
 ];
 
 // ── UTILITIES ─────────────────────────────────────────────
+// Portfolio-focused replacement content. Keeping the same data shape preserves
+// existing progress, project, log, and flashcard UI behavior.
+ROADMAP.splice(0, ROADMAP.length, ...[
+  {
+    id: 'p1',
+    phase_id: 1,
+    title: "Portfolio Positioning",
+    duration: "Week 1",
+    status: "pending",
+    topics: [
+      "Define your engineering identity and target roles",
+      "Write a short portfolio headline and about section",
+      "Choose 3-5 proof themes: systems, web, tooling, data, or automation",
+      "Set up public links: GitHub, LinkedIn, resume, Obsidian notes"
+    ],
+    resources: [
+      { type: "Guide", title: "GitHub profile README examples" },
+      { type: "Guide", title: "Developer portfolio copywriting notes" },
+      { type: "Template", title: "One-page engineer positioning canvas" }
+    ],
+    primary_artifact: "Publish a clear portfolio landing page that says who you are, what you build, and where your notes/projects live.",
+    label: "Phase 1",
+    phase: "Portfolio Positioning"
+  },
+  {
+    id: 'p2',
+    phase_id: 2,
+    title: "Project Evidence",
+    duration: "Weeks 2-3",
+    status: "pending",
+    topics: [
+      "Select flagship projects with real README files",
+      "Add screenshots, live demos, setup steps, and decisions made",
+      "Write one case study per serious project",
+      "Track status, tech stack, GitHub URL, and live URL"
+    ],
+    resources: [
+      { type: "Docs", title: "Make a README that explains the problem, tradeoffs, and result" },
+      { type: "Checklist", title: "Project evidence checklist: demo, tests, screenshots, notes" },
+      { type: "Example", title: "Engineering case study structure" }
+    ],
+    primary_artifact: "Turn one project into a complete portfolio case study with GitHub link, demo link, screenshots, and lessons learned.",
+    label: "Phase 2",
+    phase: "Project Evidence"
+  },
+  {
+    id: 'p3',
+    phase_id: 3,
+    title: "Obsidian Engineering Journal",
+    duration: "Weeks 3-4",
+    status: "pending",
+    topics: [
+      "Create an Obsidian vault for daily logs, project notes, and decisions",
+      "Use tags like #daily-log, #project, #bug, #decision, #learning",
+      "Create templates for daily entries and project writeups",
+      "Link notes back to portfolio projects and GitHub commits"
+    ],
+    resources: [
+      { type: "Docs", title: "Obsidian URI links: obsidian://open?vault=..." },
+      { type: "Template", title: "Daily engineering log template" },
+      { type: "Template", title: "Project decision record template" }
+    ],
+    primary_artifact: "Create an Obsidian vault called Engineering Journey and link this website to it with an obsidian://open URL.",
+    label: "Phase 3",
+    phase: "Obsidian Engineering Journal"
+  },
+  {
+    id: 'p4',
+    phase_id: 4,
+    title: "Public Proof System",
+    duration: "Month 2",
+    status: "pending",
+    topics: [
+      "Convert private notes into public-friendly summaries",
+      "Publish weekly engineering notes or project retrospectives",
+      "Add searchable commands, snippets, and concepts to the cheatsheet",
+      "Keep sensitive/private details out of public exports"
+    ],
+    resources: [
+      { type: "Guide", title: "Writing technical notes without oversharing" },
+      { type: "Checklist", title: "Public note safety checklist" },
+      { type: "Example", title: "Weekly learning log format" }
+    ],
+    primary_artifact: "Publish a weekly engineering digest: what you built, what broke, what you learned, and what you will improve.",
+    label: "Phase 4",
+    phase: "Public Proof System"
+  },
+  {
+    id: 'p5',
+    phase_id: 5,
+    title: "Career Readiness",
+    duration: "Month 3",
+    status: "pending",
+    topics: [
+      "Tailor resume bullets around shipped projects and measurable outcomes",
+      "Prepare project walkthrough stories for interviews",
+      "Track applications, referrals, follow-ups, and outcomes",
+      "Use flashcards for architecture, debugging, and project explanation practice"
+    ],
+    resources: [
+      { type: "Template", title: "STAR project story template" },
+      { type: "Checklist", title: "Portfolio review checklist before applying" },
+      { type: "Practice", title: "Mock project walkthrough questions" }
+    ],
+    primary_artifact: "Apply to roles with a portfolio, resume, and project stories that all point to the same proof.",
+    label: "Phase 5",
+    phase: "Career Readiness"
+  }
+]);
+
+FLASHCARDS.splice(0, FLASHCARDS.length, ...[
+  { id: 'fc1', topic: 'Portfolio', q: 'What should your portfolio answer in the first 10 seconds?', a: 'Who you are, what kind of engineering work you do, your strongest proof, and where to inspect it. A visitor should quickly find your projects, GitHub, resume, and engineering notes.' },
+  { id: 'fc2', topic: 'Portfolio', q: 'What makes a project portfolio-worthy?', a: 'It solves a clear problem, has runnable code or a demo, explains tradeoffs, includes screenshots or evidence, and documents what you learned or changed after debugging.' },
+  { id: 'fc3', topic: 'Projects', q: 'What belongs in a strong project README?', a: 'Problem, features, tech stack, architecture notes, setup steps, screenshots or demo, tests, known limitations, and future improvements.' },
+  { id: 'fc4', topic: 'Projects', q: 'How do you write a project case study?', a: 'Use: context, goal, constraints, architecture, hard problems, decisions, result, screenshots, lessons learned, and links. Keep it honest and specific.' },
+  { id: 'fc5', topic: 'Obsidian', q: 'How should Obsidian connect to the portfolio?', a: 'Use Obsidian for private raw notes and the website for public proof. Export polished summaries from notes into project pages, logs, or weekly updates.' },
+  { id: 'fc6', topic: 'Obsidian', q: 'What tags help document an engineering journey?', a: '#daily-log, #project, #bug, #decision, #architecture, #learning, #interview, #snippet, and #retrospective are a useful starting set.' },
+  { id: 'fc7', topic: 'Writing', q: 'What is the best daily engineering log format?', a: 'Today I learned, today I built, errors/debugging, decision made, link to code/commit, and next step. Short but consistent beats long but rare.' },
+  { id: 'fc8', topic: 'Writing', q: 'How do you turn a private note into a public post?', a: 'Remove secrets and rough speculation, add context, show the final lesson, include links or screenshots, and state what changed in your thinking or implementation.' },
+  { id: 'fc9', topic: 'Interview', q: 'How should you explain a project in an interview?', a: 'Start with the problem and user, then your role, architecture, tradeoffs, hard bugs, result, and what you would improve next.' },
+  { id: 'fc10', topic: 'Interview', q: 'What is a good answer to "Tell me about yourself" for an engineer?', a: 'A concise story: current stage, engineering interests, strongest project proof, what you are improving now, and the roles/problems you want to work on.' },
+  { id: 'fc11', topic: 'Career', q: 'What should application tracking capture?', a: 'Company, role, source, date, status, job link, referral/contact, follow-up date, notes, and which portfolio proof you sent.' },
+  { id: 'fc12', topic: 'Career', q: 'How can your portfolio help with referrals?', a: 'It gives people a low-effort way to understand your work and forward proof. A good project link is easier to recommend than a vague request.' },
+  { id: 'fc13', topic: 'Systems', q: 'What should a decision record include?', a: 'Context, options considered, decision, reasons, consequences, date, and links to related code or notes.' },
+  { id: 'fc14', topic: 'Systems', q: 'Why document bugs you fixed?', a: 'Debugging notes prove depth. They show how you isolate problems, test hypotheses, read errors, and improve systems after failure.' },
+  { id: 'fc15', topic: 'GitHub', q: 'What makes a GitHub profile stronger?', a: 'Pinned relevant repositories, clean READMEs, meaningful commits, issue/PR history, screenshots, and a profile README that links to your portfolio.' },
+  { id: 'fc16', topic: 'GitHub', q: 'What should commit messages communicate?', a: 'The intent of the change. Prefer specific messages like "Add project filtering by status" over vague messages like "update files".' },
+  { id: 'fc17', topic: 'Proof', q: 'What is stronger: a certificate or a shipped project?', a: 'A shipped project is usually stronger because it shows applied skill. Certificates can help, but proof comes from working code, decisions, and results.' },
+  { id: 'fc18', topic: 'Proof', q: 'How do you show progress without pretending to be senior?', a: 'Be specific and honest: "I built X, struggled with Y, learned Z, and next I am improving A." Growth plus evidence reads well.' },
+  { id: 'fc19', topic: 'Review', q: 'What should you review before sharing the portfolio?', a: 'Broken links, mobile layout, spelling, project clarity, GitHub visibility, secret leakage, resume link, and whether the first screen says what you do.' },
+  { id: 'fc20', topic: 'Review', q: 'What metric matters most for this site?', a: 'Consistency. The site becomes valuable when it accumulates logs, projects, decisions, and visible progress over weeks.' }
+]);
+
+RESOURCES.splice(0, RESOURCES.length, ...[
+  { id: 'r1', name: 'Obsidian URI documentation', url: 'https://help.obsidian.md/Extending+Obsidian/Obsidian+URI', phase: 'Obsidian', type: 'Docs', free: true, icon: 'OB', desc: 'Use obsidian://open links from this site to your local vault and notes.' },
+  { id: 'r2', name: 'Obsidian templates guide', url: 'https://help.obsidian.md/Plugins/Templates', phase: 'Obsidian', type: 'Docs', free: true, icon: 'MD', desc: 'Create reusable templates for daily logs, project notes, and decision records.' },
+  { id: 'r3', name: 'GitHub profile README guide', url: 'https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-github-profile/customizing-your-profile/about-your-profile', phase: 'Portfolio', type: 'Docs', free: true, icon: 'GH', desc: 'Make your GitHub profile point to your best work and your portfolio.' },
+  { id: 'r4', name: 'GitHub Pages', url: 'https://docs.github.com/en/pages', phase: 'Portfolio', type: 'Docs', free: true, icon: 'GH', desc: 'Free static hosting for this portfolio website.' },
+  { id: 'r5', name: 'Vercel static deployments', url: 'https://vercel.com/docs/deployments', phase: 'Portfolio', type: 'Docs', free: true, icon: 'VX', desc: 'Another easy way to deploy and share this site publicly.' },
+  { id: 'r6', name: 'Make a README', url: 'https://www.makeareadme.com/', phase: 'Projects', type: 'Guide', free: true, icon: 'RM', desc: 'Simple structure for README files that recruiters and engineers can scan.' },
+  { id: 'r7', name: 'Keep a Changelog', url: 'https://keepachangelog.com/en/1.1.0/', phase: 'Projects', type: 'Guide', free: true, icon: 'CL', desc: 'A clean habit for documenting project changes over time.' },
+  { id: 'r8', name: 'Architecture Decision Records', url: 'https://adr.github.io/', phase: 'Projects', type: 'Guide', free: true, icon: 'AD', desc: 'Use ADRs in Obsidian or repos to explain why you made technical choices.' },
+  { id: 'r9', name: 'Google Technical Writing Courses', url: 'https://developers.google.com/tech-writing', phase: 'Writing', type: 'Course', free: true, icon: 'TW', desc: 'Improve the clarity of engineering notes and project writeups.' },
+  { id: 'r10', name: 'Diataxis documentation framework', url: 'https://diataxis.fr/', phase: 'Writing', type: 'Guide', free: true, icon: 'DX', desc: 'Great mental model for tutorials, how-to guides, explanations, and references.' },
+  { id: 'r11', name: 'STAR interview method', url: 'https://www.themuse.com/advice/star-interview-method', phase: 'Career', type: 'Guide', free: true, icon: 'ST', desc: 'Turn projects into interview stories with situation, task, action, and result.' },
+  { id: 'r12', name: 'roadmap.sh Computer Science', url: 'https://roadmap.sh/computer-science', phase: 'Career', type: 'Practice', free: true, icon: 'CS', desc: 'Use this only as a gap map, not as a reason to delay building.' }
+]);
+
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
@@ -466,12 +614,34 @@ function updateStreakPill() {
   const entries = S.get(KEYS.entries) || [];
   const streak = calcStreak(entries);
   const el = document.getElementById('streak-pill');
-  if (el) el.textContent = `🔥 ${streak}d streak`;
+  if (el) el.textContent = `${streak}d log streak`;
+}
+
+function applyPortfolioChrome() {
+  const brand = document.querySelector('.nav-brand');
+  if (brand) brand.innerHTML = '<span>VISHAL</span> portfolio';
+
+  const labels = {
+    'index.html': 'Home',
+    'log.html': 'Journal',
+    'roadmap.html': 'Build Plan',
+    'resources.html': 'Library',
+    'flashcards.html': 'Practice',
+    'projects.html': 'Projects',
+    'jobs.html': 'Applications',
+    'cheatsheet.html': 'Snippets'
+  };
+
+  document.querySelectorAll('nav a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (labels[href]) a.textContent = labels[href];
+  });
 }
 
 function renderNav() {
   const nav = document.querySelector('nav');
   if (!nav) return;
+  applyPortfolioChrome();
   setActiveNav();
   updateStreakPill();
 }
@@ -516,7 +686,7 @@ function downloadBackup() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `nexus-leveling-backup-${todayStr()}.json`;
+  a.download = `engineering-portfolio-backup-${todayStr()}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -698,14 +868,14 @@ function animateCounter(el, target, duration) {
   }
 
   const NODES = [
-    { id: 'dashboard', label: 'CORE_DASHBOARD', href: 'index.html', progress: null },
-    { id: 'log', label: 'DAILY_LOG', href: 'log.html', progress: getLogStreak() },
-    { id: 'roadmap', label: 'ROADMAP', href: 'roadmap.html', progress: getRoadmapPct() },
-    { id: 'resources', label: 'RESOURCES', href: 'resources.html', progress: null },
-    { id: 'flashcards', label: 'FLASHCARDS', href: 'flashcards.html', progress: getFlashcardMastery() },
+    { id: 'dashboard', label: 'HOME', href: 'index.html', progress: null },
+    { id: 'log', label: 'JOURNAL', href: 'log.html', progress: getLogStreak() },
+    { id: 'roadmap', label: 'BUILD_PLAN', href: 'roadmap.html', progress: getRoadmapPct() },
+    { id: 'resources', label: 'LIBRARY', href: 'resources.html', progress: null },
+    { id: 'flashcards', label: 'PRACTICE', href: 'flashcards.html', progress: getFlashcardMastery() },
     { id: 'projects', label: 'PROJECTS', href: 'projects.html', progress: null },
-    { id: 'jobs', label: 'JOBS', href: 'jobs.html', progress: getJobAppCount() },
-    { id: 'cheatsheet', label: 'CHEATSHEET', href: 'cheatsheet.html', progress: null },
+    { id: 'jobs', label: 'APPLICATIONS', href: 'jobs.html', progress: getJobAppCount() },
+    { id: 'cheatsheet', label: 'SNIPPETS', href: 'cheatsheet.html', progress: null },
   ];
 
   function formatReadout(node) {
@@ -792,6 +962,44 @@ function animateCounter(el, target, duration) {
     });
     const innerMesh = new THREE.Mesh(innerGeo, innerMat);
     scene.add(innerMesh);
+
+    // Orbital Ring 1 (Cyan Latitude Ring)
+    const ringGeo1 = new THREE.TorusGeometry(2.3, 0.007, 16, 100);
+    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.22 });
+    const ringMesh1 = new THREE.Mesh(ringGeo1, ringMat1);
+    ringMesh1.rotation.x = Math.PI * 0.35;
+    scene.add(ringMesh1);
+
+    // Orbital Ring 2 (Magenta Counter Ring)
+    const ringGeo2 = new THREE.TorusGeometry(2.7, 0.005, 16, 100);
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xff2d7a, transparent: true, opacity: 0.15 });
+    const ringMesh2 = new THREE.Mesh(ringGeo2, ringMat2);
+    ringMesh2.rotation.x = -Math.PI * 0.25;
+    scene.add(ringMesh2);
+
+    // 3D Ambient Dust Particles
+    const particleCount = 140;
+    const particlePositions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = 3.5 + Math.random() * 4.0;
+      particlePositions[i] = r * Math.sin(phi) * Math.cos(theta);
+      particlePositions[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+      particlePositions[i + 2] = r * Math.cos(phi);
+    }
+    const particleGeo = new THREE.BufferGeometry();
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0x00e5ff,
+      size: 0.035,
+      transparent: true,
+      opacity: 0.35
+    });
+    const particleCloud = new THREE.Points(particleGeo, particleMat);
+    scene.add(particleCloud);
 
     // Create 3D Nodes Group for Orbit
     const nodesGroup = new THREE.Group();
@@ -1202,6 +1410,17 @@ function animateCounter(el, target, duration) {
       innerMesh.rotation.y -= (0.02 + scrollSpeed * 0.5) * delta;
       innerMesh.rotation.x -= 0.008 * delta;
 
+      // Orbital Rings Rotation
+      if (typeof ringMesh1 !== 'undefined') {
+        ringMesh1.rotation.z += 0.08 * delta;
+        ringMesh2.rotation.z -= 0.05 * delta;
+      }
+
+      // Particle Cloud Ambient Motion
+      if (typeof particleCloud !== 'undefined') {
+        particleCloud.rotation.y += 0.015 * delta;
+      }
+
       // Project positions & check occlusion
       updateNodeScreenPositions();
 
@@ -1330,4 +1549,3 @@ function animateCounter(el, target, duration) {
     initCommandPalette();
   }
 })();
-

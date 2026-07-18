@@ -25,20 +25,18 @@
 
 <div class="page">
   <div class="page-header animate-in">
-    <h1>Resources</h1>
-    <p>Every link from your roadmap. Mark visited as you use them.</p>
+    <h1>Portfolio Library</h1>
+    <p>Links for Obsidian, project writeups, documentation, deployment, and career proof. Mark visited as you use them.</p>
   </div>
 
   <div class="animate-in delay-1" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
     <select id="filter-phase" onchange="render()" style="font-size:13px;padding:7px 10px;">
       <option value="">All phases</option>
-      <option>Week 1</option><option>Week 2</option><option>Week 3</option><option>Week 4</option>
-      <option>Month 2</option><option>Month 3-4</option><option>Month 5</option>
-      <option>Month 6</option><option>Month 7-8</option><option>Month 9-10</option><option>General</option>
+      <option>Portfolio</option><option>Projects</option><option>Obsidian</option><option>Writing</option><option>Career</option>
     </select>
     <select id="filter-type" onchange="render()" style="font-size:13px;padding:7px 10px;">
       <option value="">All types</option>
-      <option>Video</option><option>Course</option><option>Lab</option><option>Docs</option><option>Book</option><option>Practice</option>
+      <option>Guide</option><option>Course</option><option>Docs</option><option>Practice</option>
     </select>
     <label class="toggle-wrap" style="margin-left:auto;">
       <div class="toggle-track" id="hide-visited" onclick="toggleHideVisited()"><div class="toggle-knob"></div></div>
@@ -117,7 +115,7 @@ function render() {
     return;
   }
 
-  const typeColors = { Video:'badge-blue', Course:'badge-green', Lab:'badge-purple', Docs:'badge-gray', Book:'badge-amber', Practice:'badge-amber' };
+  const typeColors = { Guide:'badge-blue', Course:'badge-green', Docs:'badge-gray', Practice:'badge-amber' };
 
   document.getElementById('resources-list').innerHTML = filtered.map(r => {
     const isVisited = visited.includes(r.id);
